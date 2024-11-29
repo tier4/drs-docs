@@ -18,6 +18,9 @@ DRS calibration
 
 This instruction assumes that the camera and LiDAR data are delivered over ROS topic to a separate PC and the calibration tools work on the PC. The right-most port of the ECUs is reserved for ROS communication. Therefore,  192.168.20.*/24 should be assigned to the port of the separate PC side.
 
+The following figure depicts a connection diagram example to calibrate the sensors connected to the DSR ECU #0:
+
+![](images/drs_calibration_connection_diagram.svg)
 
 ## Install (part of) DRS
 
