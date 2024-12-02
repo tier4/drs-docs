@@ -2,12 +2,12 @@ DRS calibration
 ===
 - [DRS calibration](#drs-calibration)
 - [Setup](#setup)
-  - [Install (part of) DRS](#install-part-of-drs)
+  - [Install required DRS components (on the setup PC)](#install-drs)
   - [Install calibration tool](#install-calibration-tool)
 - [Camera intrinsic calibration](#camera-intrinsic-calibration)
   - [Confirmation and refinement](#confirmation-and-refinement)
   - [Save the result](#save-the-result)
-- [Camera-LiDAR Extrinsic calibration](#camera-lidar-extrinsic-calibration)
+- [Camera-LiDAR extrinsic calibration](#camera-lidar-extrinsic-calibration)
 - [LiDAR-LiDAR calibration](#lidar-lidar-calibration)
 - [Related articles](#related-articles)
 
@@ -16,15 +16,18 @@ DRS calibration
 ![](images/setup.png)
 
 
-This instruction assumes that the camera and LiDAR data are delivered over ROS topic to a separate PC and the calibration tools work on the PC. The right-most port of the ECUs is reserved for ROS communication. Therefore,  192.168.20.*/24 should be assigned to the port of the separate PC side.
+In this manual, it is assumed that the camera and LiDAR data are delivered over ROS topics to a separate PC where the calibration tools are run. The right-most port of both Anvil ECUs is reserved for ROS communication with the PC, which should be configured to have a static IP address of `192.168.20.*/24` on the port connected to the Anvil ECU (`*` can be replaced with any number between 3 and 255).
 
+The correction configuration to calibrate the sensors connected to DRS ECU1 is illustrated in the following diagram:
 
-## Install (part of) DRS
+![](images/drs_calibration_connection_diagram.svg)
 
-Some calibration process requires functions provided by DRS package, build them on the PC that the calibration tool will run (e.g., a laptop)
+## Install required DRS components (on the setup PC)
+
+The calibration process requires some components of the DRS package to be built locally. As we will run the calibration tools on a separate connected PC, the following DRS components must be installed manually.
 
 > [!NOTE]
-> The source code should be provided by TIER IV because currently they are stored in the private repository
+> The source code will be provided by TIER IV as it is currently hosted in a private repository.
 
 
 ```shell
@@ -45,7 +48,7 @@ mkdir calibration_tools
 cd calibration_tools
 wget https://raw.githubusercontent.com/tier4/CalibrationTools/tier4/universe/calibration_tools_standalone.repos
 ```
-modify the contents of calibration_tools_standalone.repos as follows:
+The contents of `calibration_tools_standalone.repos` requires the following modifications:
 
 ```patch
 --- ./calibration_tools_standalone.repos.before	2024-11-06 15:39:28.525656495 +0900
@@ -75,23 +78,23 @@ rosdep install -y -r --from-paths \
 # Camera intrinsic calibration
 Tool reference document: [intrinsic_camera_calibrator.md](https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/intrinsic_camera_calibrator.md) 
 
-1. preparation
+1. Preparation
     ```
     cd calibration_tools
     source ./install/setup.bash
     ```
-2. execute the tool
-- for C2-30 (camera0, camera4)
+2. Execute the tool
+- For C2-30 (camera0, camera4)
     ```
     ros2 run intrinsic_camera_calibrator camera_calibrator \
     --config-file ./install/intrinsic_camera_calibrator/share/intrinsic_camera_calibrator/config/intrinsics_calibrator_c2_30.yaml
     ```
-- for C2-120 (camera1, camera2, camera3, camera5, camera6, camera7, camera8)
+- For C2-120 (camera1, camera2, camera3, camera5, camera6, camera7, camera8)
     ```
     ros2 run intrinsic_camera_calibrator camera_calibrator \
         --config-file ./install/intrinsic_camera_calibrator/share/intrinsic_camera_calibrator/config/intrinsics_calibrator_c2_120.yaml
     ```
-3. perform calibration for each camera
+3. Perform calibration for each camera
     1. On the first dialog:  
         ![](images/1st_diag.png)
         - Set “Board options” to Chess board
@@ -100,68 +103,66 @@ Tool reference document: [intrinsic_camera_calibrator.md](https://github.com/tie
     2. On the second dialog:  
         ![](images/2nd_diag.png)
         - Select the target topic to be calibrated as “Ros topics”
-        - Set BEST_EFFORT to “qos reliability”
-        - Set VOLATILE to “qos durability”
+        - Set “qos reliability” to BEST_EFFORT
+        - Set “qos durability” to VOLATILE
         - Then, press “Ok”
 
     3. On the main window:  
         ![](images/image-20241007-020030.png)
-        - check “Visualization options” > “Draw training occupancy”
-        - set 0.3 to “Visualization options” > “Drawings alpha”  
-        - [ Just confirm ] “Calibration control” > “Calibration parameters”: Set the value of “radial_distortion_coefficients” according to the camera lens FoV  
+        - In “Visualization options”
+            - Check “Draw training occupancy”
+            - Set “Drawings alpha” to 0.3
+        - [Just confirm] In “Calibration control” > “Calibration parameters”: set the value of “radial_distortion_coefficients” according to the camera lens FoV  
             ![](images/image-20241007-023441.png)
             - 120deg → 4, 30deg → 2
         - “Data collection” > “Data collection parameters”: tune the values of “max_allowed_max_reprojection_error” and “max_allowed_rms_reprojection_error”  
             ![](images/image-20241007-023835.png)
-            - In this image, “max_allowed_max_reprojection_error” and “max_allowed_rms_reprojection_errot” were set to 1.5 and 1.0, respectively. 
-
-            - Tune these values according to the values displayed in “Single-shot calibration detection results”. If displayed values are frequently over the setting values, you have to set larger ones.
+            - In this image, “max_allowed_max_reprojection_error” and “max_allowed_rms_reprojection_error” were set to 1.5 and 1.0, respectively.
+            - Tune these values according to the values displayed in “Single-shot calibration detection results”. If the displayed values are frequently higher than the setting values, you have to set larger ones.
                 ![](images/image-20241007-042232.png)
-    4. Move the target chessboard slowly to make almost all cells red. Making the target board face various directions is also effective in calculating accurate parameters. You can also move the camera direction if possible.
+    4. Move the target chessboard slowly until almost all of the cells become red. Including multiple board angles and poses also assists in the generation of accurate intrinsic parameters. Moving the camera instead of the board is also possible.
 
-    5. Once almost all cells turn red, click “Calibration control” > “Calibrate”. When the “calibration status turns from “calibrating” to “idle”, click “Save”  
+    5. Once almost all cells turn red, click “Calibration control” > “Calibrate”. When the “calibration status changes from “calibrating” to “idle”, click “Save”.
         ![](images/image-20241007-042940.png)
-        - If a dialog appears, select a temporary folder (hereafter, /tmp/camera_x) to save the results.
+        - If a dialog appears, select a temporary folder (hereafter, `/tmp/camera_x`) to save the results.
         - After you confirm the results are saved, close the main window by pressing the close button on the window title bar. 
 
 ## Confirmation and refinement
-1. Open the folder named training_images that exists under the folder you saved the results ( `/tmp/camera_x`). 
+1. Open the folder named `training_images` that exists under the folder where you saved the results ( `/tmp/camera_x`).
 
-2. Check the all images saved in the folder. If you find images that have (motion) blur on the target board, remove the images from the folder.
+2. Check all of the images saved in the folder. If you find images that have (motion) blur on the target board, remove the images from the folder.
 
 ![](images/DRS_calib_manual_bad_image_example.png)
 
-3. run the tool again 
-- for C2-30 (camera0, camera4)
+3. Run the tool again 
+- For C2-30 (camera0, camera4)
     ```shell
     ros2 run intrinsic_camera_calibrator camera_calibrator \
     --config-file ./install/intrinsic_camera_calibrator/share/intrinsic_camera_calibrator/config/intrinsics_calibrator_c2_30.yaml
 
     ```
-- for C2-120 (camera1, camera2, camera3, camera5, camera6, camera7, camera8)
+- For C2-120 (camera1, camera2, camera3, camera5, camera6, camera7, camera8)
     ```shell
     ros2 run intrinsic_camera_calibrator camera_calibrator \
     --config-file ./install/intrinsic_camera_calibrator/share/intrinsic_camera_calibrator/config/intrinsics_calibrator_c2_120.yaml
     ```
 - On the first dialog:  
     ![](images/image-20241007-052117.png)
-    - select `Image files` for “Source options”
-    - select `Chess board`  (the same one you selected in the data correction step) for “Board options”
+    - Select `Image files` for “Source options”
+    - Select `Chess board`  (the same one you selected in the data correction step) for “Board options”
     - Click “Start”
 
 - On the second dialog  
-    - click “Select image files”. Once a dialog to select images opens, select all images under `training_images` of the results saved directory (`/tmp/camera_x`). Then, click “Open”
-
+    - Click “Select image files”. Once a dialog to select images opens, select all images under `training_images` in the results saved directory (`/tmp/camera_x`). Then, click “Open”.
     - Click “Ok”
 
 - All selected images will be loaded in the main window automatically. 
-- After that, click “Calibration control” > “Calibrate” and “Save”. On the dialog to select a folder to save, select another one (ex. `/tmp/camera_x_refined`) than the previous one (`/tmp/camera_x`) 
+- Once the images are loaded, click “Calibration control” > “Calibrate” and “Save”. On the dialog to select a folder to save, select a different folder (e.g. `/tmp/camera_x_refined`) from the previous one (`/tmp/camera_x`).
 
 ## Save the result
-After pressing the “Save” button on the GUI, you should see <camera_name>_info.yaml in the directory you chose. To reflect the calibration result in the system, the following operations are required.
-
+After pressing the “Save” button on the GUI, you should see `<camera_name>_info.yaml` in the directory you chose. To reflect the calibration result in the system, the following operations are required:
 1. Open the yaml file and modify the contents as follows:
-    - Fill the camera_name field according to the target camera name
+    - Fill the `camera_name` field to match the target camera name
         ```patch
         --- ./camera_info.yaml.before
         +++ ./camera_info.yaml.after
@@ -169,9 +170,9 @@ After pressing the “Save” button on the GUI, you should see <camera_name>_in
         image_width: 2880
         image_height: 1860
         -camera_name: ''
-        +camera_name: 'camera0' # <- fill by the target camera name
+        +camera_name: 'camera0' # <- change to match the target camera name
         ```
-    - [120deg camera only] Change the parameters regarding the distortion model
+    - [120deg camera only] Change distortion model parameters
         ```patch
         --- ./camera_info.yaml.before
         +++ ./camera_info.yaml.after
@@ -184,9 +185,9 @@ After pressing the “Save” button on the GUI, you should see <camera_name>_in
         distortion_coefficients:
         rows: 1
         -  cols: 5
-        +  cols: 14  # <- increase number of coefficients to handle large distortion
+        +  cols: 14  # <- increase the number of coefficients to handle large distortion
         ```
-2. Copy the modified file to the proper ECU. The correspondence which ECUs are in charge of which cameras are as follows:
+2. Copy the modified file to the corresponding ECU. The ECU camera assignment is as follows:
     - ECU1: camera0, 1, 2, and 3
     - ECU2: camera4, 5, 6, and 7
     - The replacement target looks like: 
@@ -220,16 +221,16 @@ After pressing the “Save” button on the GUI, you should see <camera_name>_in
         └...
         ```
 
-# Camera-LiDAR Extrinsic calibration
+# Camera-LiDAR extrinsic calibration
 Tool reference document: [tag_based_pnp_calibrator.md](https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/tag_based_pnp_calibrator.md)
 
-1. preparation
+1. Preparation
 ```shell
 cd calibration_tools
 source ./install/setup.bash
 ```
 
-2. execute the LiDAR packet decoder on the PC that the calibration tool will run. This aims to avoid high network load and huge delays in data transfer.
+2. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.
 - For the front LiDAR:
     ```
     ros2 launch drs_launch drs_seyond.launch.xml \
@@ -255,11 +256,11 @@ source ./install/setup.bash
     live_sensor:=false sensor_ip:=192.168.3.204 host_ip:=192.168.3.2 
     ```
 
-3. execute the tool
+3. Execute the tool
     ```shell
     ros2 run sensor_calibration_manager sensor_calibration_manager
     ```
-4. Perform calibration for each camera-LiDAR pairs
+4. Perform calibration for each camera-LiDAR pair
     1. On the first dialog:  
         ![](images/image-20241120-124937.png)
         - Select drs for “Project”
@@ -268,37 +269,37 @@ source ./install/setup.bash
 
     2. On the second dialog:
         ![](images/extrinsic_second_dialog.png)
-        - Select the proper camera name in “camera_name”. According to the selection, the proper LiDAR will be chosen by the tool for calibration
-        - Then, press “Launch”. After pressing the button, 3 popup windows will appear
+        - Select the target camera name in “camera_name”. The correct corresponding LiDAR will be chosen by the tool.
+        - Then, press “Launch”. After pressing the button, 3 popup windows will appear.
 
     3. UI preparation
-        1. On the “Image view” window, select Current /tf for “TF source”
+        1. In the “Image view” window, select Current /tf for “TF source”
             ![](images/image-20241121-112246.png)
-        2. On the Rviz, select the appropriate liar frame (ex, lidar_front for the front LiDAR) for “Global Options > Fixed Frame” instead of lidar_frame.  
+        2. In the Rviz window, insert the appropriate LiDAR frame (e.g. `lidar_front` for the front LiDAR) for “Global Options > Fixed Frame”.  
             ![](images/image-20241121-112752.png)
-        3. On the “sensor_calibration_manager” window, press the “Calibrate” button. Pressing this button triggers detection of the april tagboard.
+        3. In the “sensor_calibration_manager” window, press the “Calibrate” button. Pressing this button triggers detection of the april tagboard.
             ![](images/image-20241121-113015.png)
-        4. Once the calibration process is triggered, some texts appear in the RViz. If the april tag is detected on both a frame of LiDAR pointcloud and a camera image, the number of pairs increases.  
+        4. Once the calibration process is triggered, some text will appear in the RViz window. If the april tag is detected in both the LiDAR pointcloud and the camera image, the number of pairs increases.  
             ![](images/image-20241121-113512.png)
-            - As the number of detected pairs increases, proper projection results will be displayed on the Image view window
+            - As the number of detected pairs increases, proper projection results will be displayed on the “Image view” window.
                 ![](images/image-20241121-114001.png)
-        5. Move the board so that the location of detected pairs covers a wide area of sensor FoV as much as possible. During the process, keep an eye on the value of crossvalidation_reprojection_error. If this value gets extremely high (like over 10), some procedure until here might be missed (ex., published camera_info is not proper (calibrated) one). 
+        5. Move the board so that the location of detected pairs covers as wide an area of sensor FoV as possible. During this process, keep an eye on the value of `crossvalidation_reprojection_error`. If this value gets extremely high (like over 10), there may be an issue (e.g., published `camera_info` is not the proper (calibrated) one). 
             ![](images/image-20241121-121943.png)
-        6. When the number of detected pairs is over the predefined value, the “Save calibration” button will be enabled. After collecting sufficient data, press the button and save the result into a yaml file. If you confirm the result is surely saved, close all windows. 
+        6. When the number of detected pairs is over the predefined value, the “Save calibration” button will become available. After collecting sufficient data, press the button and save the result into a yaml file. After confirming that the result is correctly saved, close all windows. 
             ![](images/image-20241121-122343.png)
 
 # LiDAR-LiDAR calibration
 Tool reference document: [mapping_based_calibrator.md](https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/mapping_based_calibrator.md)
 
 > [!NOTE]
-> This process shall be run offline because multiple LiDAR data are stored in separate rosbags and they need to be merged.
+> The calibration process itself should be run offline because data from multiple LiDARs are stored in separate rosbags and merging is required.
 
-1. Collect data for calibration. For accurate calibration, data for figure-eight or circumference driving are suitable (Capturing the same static area with different LiDAR is the key).
+1. Collect data for calibration. For accurate calibration, a large figure-eight or oval driving trajectory are suitable. Capturing the same static area with all of the LiDARs is key. It is important to use an open area and minimize dynamic objects in the scene.
     ![](images/image-20241127-135027.png)
  
 2. Merge rosbags for calibration data
 > [!NOTE]
-> This script needs to be provided from TIER IV
+> This script needs to be provided by TIER IV.
 ```shell
 pip install mcap
 # git clone git@github.com:tier4/CoMLOpsDatasetTools.git
@@ -312,14 +313,14 @@ for i in $(find ./ -name *.mcap); do cp "${i}" "$(basename ${i} | sed 's/_0.mcap
 ros2 bag reindex .
 ```
 
-3. execute the tool
+3. Execute the tool
 ```shell
 # terminal 1: Run DRS offline launcher for decoding LiDAR packets
 ros2 launch drs_launch drs_offline.launch.xml
 # terminal 2: Run calibration tool
 ros2 run sensor_calibration_manager sensor_calibration_manager
 ```
-4. configuration
+4. Configure the tool
     1. On the first dialog:  
         ![](images/image-20241127-131828.png)
         - Select drs for “Project”
@@ -340,16 +341,16 @@ ros2 run sensor_calibration_manager sensor_calibration_manager
     cd OUTPUT_DIR
     ros2 bag play -r 0.1 .
     ```
-    - Make sure to play rosbag with the slow rate option. Playing too fast rate will cause a calibration failure. 
+    - Make sure to play rosbag at a delayed rate. Playing too fast will cause a calibration failure. 
     - Keyframe positions should be seen/added on the RViz
         ![](images/image-20241127-133557.png)
-    - wait until playing finishes
+    - Wait until playing finishes
 
-6. Once playing the rosbag finishes, execute the following to notify the tools that the playing has finished
+6. Once the rosbag has finished playing, execute the following to notify the tools that the end of the data has been reached:
     ```
     ros2 service call /stop_mapping std_srvs/srv/Empty  
     ```
-7. After calling the above service, the tool starts alignment (this may take a while). Once the alignment finishes, the “Save calibration” button on the third dialog will be enabled. If the button is enabled, press it and save the result.
+7. After calling the above service, the tool starts alignment (this may take a while). Once the alignment finishes, the “Save calibration” button on the third dialog will become available. If the button is enabled, press it and save the result.
     ![](images/image-20241127-142231.png)
  
 
