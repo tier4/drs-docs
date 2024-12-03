@@ -35,8 +35,8 @@ DRS setup on Anvil
         ExecStart=/usr/bin/jetson_clocks
         [Install]
         WantedBy=multi-user.target
-        Enable service: sudo systemctl enable jetson_clocks.service
         ```
+      - Enable service: `sudo systemctl enable jetson_clocks.service`
    3. Set power mode to maximize performance
         ```shell
         sudo nvpmodel -m 0
