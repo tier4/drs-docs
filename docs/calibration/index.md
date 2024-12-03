@@ -1,8 +1,7 @@
 DRS calibration
-===
-- [DRS calibration](#drs-calibration)
+---
 - [Setup](#setup)
-  - [Install required DRS components (on the setup PC)](#install-drs)
+  - [Install required DRS components (on the setup PC)](#install-required-drs-components-on-the-setup-pc)
   - [Install calibration tool](#install-calibration-tool)
 - [Camera intrinsic calibration](#camera-intrinsic-calibration)
   - [Confirmation and refinement](#confirmation-and-refinement)
