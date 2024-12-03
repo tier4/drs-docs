@@ -232,7 +232,8 @@ Access `172.168.1.10:8675` (Default IP and port to provide web GUI interface run
 > This configuration uses application running on Windows OS
 
 See [AV200の設定](https://docs.google.com/presentation/d/1JCK5UlOemPfUKJGgPXGNl--skfJwkuaZ67il8Kmyc_E/edit#slide=id.g3157a27436e_0_192)
-  
+  ## NAS
+  See [DRS-NAS(QNAP)の設定](https://docs.google.com/presentation/d/1MjBWWuyWrQPvxsnwMA8kEqOR3hi0MxyAGsGCiyZgBfw/edit?usp=sharing)
 
 # Related articles
 - [DRS calibration](../calibration/index.md)
