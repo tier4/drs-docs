@@ -17,7 +17,7 @@ DRS calibration
 
 In this manual, it is assumed that the camera and LiDAR data are delivered over ROS topics to a separate PC where the calibration tools are run. The right-most port of both Anvil ECUs is reserved for ROS communication with the PC, which should be configured to have a static IP address of `192.168.20.*/24` on the port connected to the Anvil ECU (`*` can be replaced with any number between 3 and 255).
 
-The correction configuration to calibrate the sensors connected to DRS ECU1 is illustrated in the following diagram:
+The correction configuration to calibrate the sensors connected to DRS ECU0 is illustrated in the following diagram:
 
 ![](images/drs_calibration_connection_diagram.svg)
 
@@ -187,8 +187,8 @@ After pressing the “Save” button on the GUI, you should see `<camera_name>_i
         +  cols: 14  # <- increase the number of coefficients to handle large distortion
         ```
 2. Copy the modified file to the corresponding ECU. The ECU camera assignment is as follows:
-    - ECU1: camera0, 1, 2, and 3
-    - ECU2: camera4, 5, 6, and 7
+    - ECU0: camera0, 1, 2, and 3
+    - ECU1: camera4, 5, 6, and 7
     - The replacement target looks like: 
         ```
         data_recording_system/src/individual_params/config/default
