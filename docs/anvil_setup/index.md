@@ -199,6 +199,12 @@ python3 -m pip install gpiod==1.5.4  # Install additional dependency that rosdep
 ./build.sh
 ./setup-drs.sh
 ```
+> [!Note]
+> `setup-drs.sh` will show three dialogs to be filled:
+> - ECU ID: the local ECU ID ( `0` or `1` ). Front and right facing sensor are connected to the ECU0, others are connected to the ECU1.
+> - SENSING SYSTEM ID: this value will be acquired via CLI or provided from TIER IV
+> - MODULE ID: this value will be acquired via CLI or provided from TIER IV
+
 
 ## Network configuration
 To enable password-less ssh, type the following on ECU#0
