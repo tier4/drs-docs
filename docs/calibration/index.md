@@ -386,7 +386,7 @@ ros2 run sensor_calibration_manager sensor_calibration_manager
     ![](images/image-20241127-142231.png)
 
 8. Copy the resulting file to **both** ECUs with the proper renaming.
-   - Because the result will be referred in both ECUs, keep in mind not to miss copying it to the both ECUs.
+   - Because the file will be used in ECU0 and ECU1, please make sure to copy to both.
    - Rename the result file to `drs_base_link_to_lidars.yaml`
    - The replacement target looks like:
 
