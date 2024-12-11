@@ -201,9 +201,9 @@ python3 -m pip install gpiod==1.5.4  # Install additional dependency that rosdep
 ```
 > [!Note]
 > `setup-drs.sh` will show three dialogs to be filled:
-> - ECU ID: the local ECU ID ( `0` or `1` ). Front and right facing sensor are connected to the ECU0, others are connected to the ECU1.
-> - SENSING SYSTEM ID: this value will be acquired via CLI or provided from TIER IV
-> - MODULE ID: this value will be acquired via CLI or provided from TIER IV
+> - ECU ID: the local ECU ID (`0` or `1`). Front and right facing sensor are connected to the ECU0, others are connected to the ECU1.
+> - SENSING SYSTEM ID: this value will be acquired via CLI or provided by TIER IV
+> - MODULE ID: this value will be acquired via CLI or provided by TIER IV
 
 
 ## Network configuration
