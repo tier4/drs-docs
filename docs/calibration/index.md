@@ -399,6 +399,8 @@ ros2 run sensor_calibration_manager sensor_calibration_manager
 # Design values between `base_link` and `drs_base_link` 
 - In DRS, `base_link` is described as a projected point of the rear-axle center onto the ground surface, while `drs_base_link` stands for the coordinate system origin of the INS module on the roof.
   - Both have the same coordinate criteria; `x` faces forward of the vehicle, `y` faces left side of the vehicle, and `z` faces the sky.
+  - The following figure depicts an overview of where each coordinate system exists relative to the vehicle.
+  ![](images/base_link.svg)  
 - There is no need for a precise pose relationship between them, but rough values will be appreciated to enhance the value of collected data by the vehicle. To meet this requirement, fill the pose of the `drs_base_link` relative to the `base_link` with the design values, which are calculated using CAD. The target file is:
 ```bash
    data_recording_system/src/individual_params/config/default
