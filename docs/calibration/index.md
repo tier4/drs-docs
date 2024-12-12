@@ -17,7 +17,7 @@ DRS calibration
 
 In this manual, it is assumed that the camera and LiDAR data are delivered over ROS topics to a separate PC where the calibration tools are run. The right-most port of both Anvil ECUs is reserved for ROS communication with the PC, which should be configured to have a static IP address of `192.168.20.*/24` on the port connected to the Anvil ECU (`*` can be replaced with any number between 3 and 255).
 
-The correction configuration to calibrate the sensors connected to DRS ECU1 is illustrated in the following diagram:
+The correction configuration to calibrate the sensors connected to DRS ECU0 is illustrated in the following diagram:
 
 ![](images/drs_calibration_connection_diagram.svg)
 
@@ -187,8 +187,8 @@ After pressing the “Save” button on the GUI, you should see `<camera_name>_i
         +  cols: 14  # <- increase the number of coefficients to handle large distortion
         ```
 2. Copy the modified file to the corresponding ECU. The ECU camera assignment is as follows:
-    - ECU1: camera0, 1, 2, and 3
-    - ECU2: camera4, 5, 6, and 7
+    - ECU0: camera0, 1, 2, and 3
+    - ECU1: camera4, 5, 6, and 7
     - The replacement target looks like: 
         ```
         data_recording_system/src/individual_params/config/default
@@ -287,6 +287,39 @@ source ./install/setup.bash
         6. When the number of detected pairs is over the predefined value, the “Save calibration” button will become available. After collecting sufficient data, press the button and save the result into a yaml file. After confirming that the result is correctly saved, close all windows. 
             ![](images/image-20241121-122343.png)
 
+5. Copy the resulting file to the corresponding ECU with the proper renaming.
+    - Rename the file to `camera<CAMERA_ID>_calibration_results.yaml`
+    - The replacement target looks like:
+      ```bash
+      data_recording_system/src/individual_params/config/default
+      ├── aeva_lidar.param.yaml
+      ├── camera0
+      │   ├── ...
+      │   └── camera0_calibration_results.yaml  # <- for camera0, replace the contents of this file
+      ├── camera1
+      │   ├── ...
+      │   └── camera1_calibration_results.yaml
+      ├── camera2
+      │   ├── ...
+      │   └── camera2_calibration_results.yaml
+      ├── camera3
+      │   ├── ...
+      │   └── camera3_calibration_results.yaml
+      ├── camera4
+      │   ├── ...
+      │   └── camera4_calibration_results.yaml
+      ├── camera5
+      │   ├── ...
+      │   └── camera5_calibration_results.yaml
+      ├── camera6
+      │   ├── ...
+      │   └── camera6_calibration_results.yaml
+      ├── camera7
+      │   ├── ...
+      │   └── camera7_calibration_results.yaml
+      └...
+      ```
+
 # LiDAR-LiDAR calibration
 Tool reference document: [mapping_based_calibrator.md](https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/mapping_based_calibrator.md)
 
@@ -351,7 +384,29 @@ ros2 run sensor_calibration_manager sensor_calibration_manager
     ```
 7. After calling the above service, the tool starts alignment (this may take a while). Once the alignment finishes, the “Save calibration” button on the third dialog will become available. If the button is enabled, press it and save the result.
     ![](images/image-20241127-142231.png)
- 
+
+8. Copy the resulting file to **both** ECUs with the proper renaming.
+   - Because the file will be used in ECU0 and ECU1, please make sure to copy to both.
+   - Rename the result file to `drs_base_link_to_lidars.yaml`
+   - The replacement target looks like:
+
+   ```bash
+   data_recording_system/src/individual_params/config/default
+   ├── drs_base_link_to_lidars.yaml # <- replace the contents of this file
+   └...
+   ```
+
+# Design values between `base_link` and `drs_base_link` 
+- In DRS, `base_link` is described as a projected point of the rear-axle center onto the ground surface, while `drs_base_link` stands for the coordinate system origin of the INS module on the roof.
+  - Both have the same coordinate criteria; `x` faces forward of the vehicle, `y` faces left side of the vehicle, and `z` faces the sky.
+  - The following figure depicts an overview of where each coordinate system exists relative to the vehicle.
+  ![](images/base_link.svg)  
+- There is no need for a precise pose relationship between them, but rough values will be appreciated to enhance the value of collected data by the vehicle. To meet this requirement, fill the pose of the `drs_base_link` relative to the `base_link` with the design values, which are calculated using CAD. The target file is:
+```bash
+   data_recording_system/src/individual_params/config/default
+   ├── base_link_to_drs_base_link.yaml # <- replace the contents of this file
+   └...
+```
 
 # Related articles
 - [https://tier4.atlassian.net/wiki/spaces/~621c20116a4c4c0070ac66d7/pages/3354591916/DRS+calibration]()
