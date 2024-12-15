@@ -238,6 +238,11 @@ cd calibration_tools
 source ./install/setup.bash
 ```
 
+> [!NOTE]
+> The following calibration procedure assumes specific ID and orientation for the target April tag.
+> The tag needs to be equipped to the frame as follows:
+> ![](images/extrinsic_calib_target.png)
+
 2. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.
 - For the front LiDAR:
     ```
