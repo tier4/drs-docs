@@ -61,6 +61,15 @@ The contents of `calibration_tools_standalone.repos` requires the following modi
    autoware/common:
      type: git
      url: https://github.com/autowarefoundation/autoware_common.git
+@@ -26,7 +26,7 @@
+   vendor/lidartag:
+     type: git
+     url: https://github.com/tier4/LiDARTag.git
+-    version: humble
++    version: experimental/drs
+   vendor/lidartag_msgs:
+     type: git
+     url: https://github.com/tier4/LiDARTag_msgs.git
 ```
 
 ```shell
