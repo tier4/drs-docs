@@ -303,24 +303,26 @@ source ./install/setup.bash
 
     <details>
     <summary>If no images are shown on `image_view` window</summary>
-        The possible reason of the issue is time synchronization does not work well for some reason.
-        Check the window title of `image_view` window. If the displayed "delay" value is too large like the following picture, the tolerance value can be relaxed by modifing `common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py`.
-        ![](images/Screenshot from 2024-12-15 13-18-31.png)
-        ```patch
-        diff --git a/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py b/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py
-        index c32bf28..61b82bc 100644
-        --- a/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py
-        +++ b/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py
-        @@ -55,7 +55,7 @@ class ImageViewRosInterface(Node):
-                 self.declare_parameter("use_rectified", False)
-                 self.declare_parameter("use_compressed", True)
-                 self.declare_parameter("timer_period", 1.0)
-        -        self.declare_parameter("delay_tolerance", 0.06)
-        +        self.declare_parameter("delay_tolerance", 1.06)
-        
-                 self.use_rectified = self.get_parameter("use_rectified").get_parameter_value().bool_value
-                 self.use_compressed = self.get_parameter("use_compressed").get_parameter_value().bool_value
-        ```
+
+    The possible reason of the issue is time synchronization does not work well for some reason.
+    Check the window title of `image_view` window. If the displayed "delay" value is too large like the following picture, the tolerance value can be relaxed by modifing `common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py`.
+
+    ![](images/Screenshot_from_2024-12-15_13-18-31.png)
+
+    ```patch
+    diff --git a/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py b/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py
+    index c32bf28..61b82bc 100644
+    --- a/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py
+    +++ b/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py
+    @@ -55,7 +55,7 @@ class ImageViewRosInterface(Node):
+             self.declare_parameter("use_rectified", False)
+             self.declare_parameter("use_compressed", True)
+             self.declare_parameter("timer_period", 1.0)
+    -        self.declare_parameter("delay_tolerance", 0.06)
+    +        self.declare_parameter("delay_tolerance", 1.06)
+             self.use_rectified = self.get_parameter("use_rectified").get_parameter_value().bool_value
+             self.use_compressed = self.get_parameter("use_compressed").get_parameter_value().bool_value
+    ```
     </details>
 
 
