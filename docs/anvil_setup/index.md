@@ -89,20 +89,21 @@ DRS setup on Anvil
     ```
     ```shell
     sudo ./install.sh
-    sudo reboot
+    # sudo reboot # skip this reboot
     ```
 
 4. Install C3 supported camera driver 
     > [!IMPORTANT]
     > driver package must be provided from TIER IV
     ```shell
-    # git clone git@github.com:tier4/camera_GMSL2_driver.git -b feature/c3-release
-    git clone git@github.com:tier4/camera_GMSL2_driver.git -b feature/c2-isp-ldc-fix
-    cd camera_GMSL2_driver/drivers
-    sudo apt install make build-essential debhelper debmake devscripts dkms
-    ./create_deb_pkg.sh
-    # cd ../ && sudo apt install ./tier4-camera-gmsl_1.4.4_arm64.deb
-    cd ../ && sudo apt install ./tier4-camera-gmsl_1.5.0_arm64.deb
+    # # git clone git@github.com:tier4/camera_GMSL2_driver.git -b feature/c3-release
+    # git clone git@github.com:tier4/camera_GMSL2_driver.git -b feature/c2-isp-ldc-fix
+    # cd camera_GMSL2_driver/drivers
+    # sudo apt install make build-essential debhelper debmake devscripts dkms
+    # ./create_deb_pkg.sh
+    # # cd ../ && sudo apt install ./tier4-camera-gmsl_1.4.4_arm64.deb
+    # cd ../ && sudo apt install ./tier4-camera-gmsl_1.5.0_arm64.deb
+    sudo apt install ./tier4-camera-gmsl_1.5.0_arm64.deb
     ```
 
 5. Configure the driver
