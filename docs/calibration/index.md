@@ -240,7 +240,7 @@ source ./install/setup.bash
 
 > [!NOTE]
 > The following calibration procedure assumes specific ID and orientation for the target April tag.
-> The tag needs to be equipped to the frame as follows:
+> This exact tag needs to be mounted to the frame in the illustrated orientation:
 > ![](images/extrinsic_calib_target.png)
 
 2. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.
@@ -302,10 +302,10 @@ source ./install/setup.bash
             ![](images/image-20241121-122343.png)
 
     <details>
-    <summary>If no images are shown on `image_view` window</summary>
+    <summary>If no images are shown in the `image_view` window</summary>
 
-    The possible reason of the issue is time synchronization does not work well for some reason.
-    Check the window title of `image_view` window. If the displayed "delay" value is too large like the following picture, the tolerance value can be relaxed by modifing `common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py`.
+    A possible cause of this issue is poor time synchronization.
+    Check the window title of `image_view` window. If the displayed "delay" value is too large, as in the following picture, the tolerance value can be relaxed by modifying `common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py`.
 
     ![](images/Screenshot_from_2024-12-15_13-18-31.png)
 
