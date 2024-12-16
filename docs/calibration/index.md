@@ -61,6 +61,15 @@ The contents of `calibration_tools_standalone.repos` requires the following modi
    autoware/common:
      type: git
      url: https://github.com/autowarefoundation/autoware_common.git
+@@ -26,7 +26,7 @@
+   vendor/lidartag:
+     type: git
+     url: https://github.com/tier4/LiDARTag.git
+-    version: humble
++    version: experimental/drs
+   vendor/lidartag_msgs:
+     type: git
+     url: https://github.com/tier4/LiDARTag_msgs.git
 ```
 
 ```shell
@@ -229,6 +238,11 @@ cd calibration_tools
 source ./install/setup.bash
 ```
 
+> [!NOTE]
+> The following calibration procedure assumes specific ID and orientation for the target April tag.
+> This exact tag needs to be mounted to the frame in the illustrated orientation:
+> ![](images/extrinsic_calib_target.png)
+
 2. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.
 - For the front LiDAR:
     ```
@@ -286,6 +300,31 @@ source ./install/setup.bash
             ![](images/image-20241121-121943.png)
         6. When the number of detected pairs is over the predefined value, the “Save calibration” button will become available. After collecting sufficient data, press the button and save the result into a yaml file. After confirming that the result is correctly saved, close all windows. 
             ![](images/image-20241121-122343.png)
+
+    <details>
+    <summary>If no images are shown in the `image_view` window</summary>
+
+    A possible cause of this issue is poor time synchronization.
+    Check the window title of `image_view` window. If the displayed "delay" value is too large, as in the following picture, the tolerance value can be relaxed by modifying `common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py`.
+
+    ![](images/Screenshot_from_2024-12-15_13-18-31.png)
+
+    ```patch
+    diff --git a/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py b/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py
+    index c32bf28..61b82bc 100644
+    --- a/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py
+    +++ b/common/tier4_calibration_views/tier4_calibration_views/image_view_ros_interface.py
+    @@ -55,7 +55,7 @@ class ImageViewRosInterface(Node):
+             self.declare_parameter("use_rectified", False)
+             self.declare_parameter("use_compressed", True)
+             self.declare_parameter("timer_period", 1.0)
+    -        self.declare_parameter("delay_tolerance", 0.06)
+    +        self.declare_parameter("delay_tolerance", 1.06)
+             self.use_rectified = self.get_parameter("use_rectified").get_parameter_value().bool_value
+             self.use_compressed = self.get_parameter("use_compressed").get_parameter_value().bool_value
+    ```
+    </details>
+
 
 5. Copy the resulting file to the corresponding ECU with the proper renaming.
     - Rename the file to `camera<CAMERA_ID>_calibration_results.yaml`
