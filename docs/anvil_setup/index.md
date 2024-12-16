@@ -193,6 +193,20 @@ git clone git@github.com:tier4/data_recording_system.git
 cd data_recording_system
 ./setup-dev-env.sh
 ```
+> [!Note]
+> If ROS build failes with an error like `/usr/include/c++/9/bits/stl_function.h:1315:44: internal compiler error: Segmentation fault`,
+> the following modification may solve the problem:
+> - Open `/etc/security/limits.conf`
+> - Add the following lines
+> ```
+> nvidia            hard    stack           unlimited
+> nvidia            soft    stack           unlimited
+> ```
+> - reboot the ECU
+>   - you can check whether the above modification is reflected by `ulimit -a`
+> - `sudo rm -rf /opt/ros`
+> - execute `setup-dev-env.sh` again
+
 ```shell
 vcs import src < autoware.repos
 rosdep install -y -r --from-paths `colcon list --packages-up-to drs_launch simple_frontend -p` --ignore-src
