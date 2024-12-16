@@ -211,6 +211,7 @@ cd data_recording_system
 vcs import src < autoware.repos
 rosdep install -y -r --from-paths `colcon list --packages-up-to drs_launch simple_frontend -p` --ignore-src
 python3 -m pip install gpiod==1.5.4  # Install additional dependency that rosdep can not handle
+source ~/.bashrc
 ./build.sh
 ./setup-drs.sh
 ```
