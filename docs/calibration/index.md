@@ -83,6 +83,9 @@ rosdep install -y -r --from-paths \
   --packages-up-to sensor_calibration_tools
 ```
 
+DRS uses [CycloneDDS](https://github.com/eclipse-cyclonedds/cyclonedds) as DDS middleware. Particular configurations for the DDS are required on the PC on which the calibration tools run so that the pc and DRS ECUs communicate smoothly. See [here](https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/network-configuration/dds-settings/#tune-dds-settings) in detail.Note that the cyclonedds ROS2 middleware can be installed by `apt install ros-humble-rmw-cyclonedds-cpp`.
+
+
 # Camera intrinsic calibration
 Tool reference document: [intrinsic_camera_calibrator.md](https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/intrinsic_camera_calibrator.md) 
 
