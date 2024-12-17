@@ -136,7 +136,7 @@ DRS setup on Anvil
         -options tier4_imx728 trigger_mode=0 enable_auto_exposure=1 enable_distortion_correction=1
         +options tier4_imx728 trigger_mode=3 enable_auto_exposure=1 enable_distortion_correction=0 shutter_time_min=11000 shutter_time_max=11000 fsync_mfp=7
         ```
-6. Update the contents of  `/lib/udev/rules.d/99-tier4-camera-gmsl.rules` as follows:
+6. Replace the contents of  `/lib/udev/rules.d/99-tier4-camera-gmsl.rules` as follows:
     ```conf
     SUBSYSTEM=="video4linux", ATTR{name}=="vi-output, tier4_imx728 40-003b", SYMLINK+= "gmsl/tier4-imx728-cam8"
     SUBSYSTEM=="video4linux", ATTR{name}=="vi-output, tier4_imx490 40-002b", SYMLINK+= "gmsl/tier4-imx490-cam8"
