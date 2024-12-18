@@ -109,6 +109,7 @@ Tool reference document: [intrinsic_camera_calibrator.md](https://github.com/tie
     1. On the first dialog:  
         ![](images/1st_diag.png)
         - Set “Board options” to Chess board
+        - Set "Parameters Profile" to Ceres Calib
         - Then, press “Start”
 
     2. On the second dialog:  
@@ -123,14 +124,15 @@ Tool reference document: [intrinsic_camera_calibrator.md](https://github.com/tie
         - In “Visualization options”
             - Check “Draw training occupancy”
             - Set “Drawings alpha” to 0.3
-        - [Just confirm] In “Calibration control” > “Calibration parameters”: set the value of “radial_distortion_coefficients” according to the camera lens FoV  
+        - In "Calibration control" > "Calibration parameters": set the value of "radial_distortion_coefficients" and "rational_distortion_coefficients" according to the camera lens FoV
             ![](images/image-20241007-023441.png)
-            - 120deg → 4, 30deg → 2
-        - “Data collection” > “Data collection parameters”: tune the values of “max_allowed_max_reprojection_error” and “max_allowed_rms_reprojection_error”  
-            ![](images/image-20241007-023835.png)
-            - In this image, “max_allowed_max_reprojection_error” and “max_allowed_rms_reprojection_error” were set to 1.5 and 1.0, respectively.
-            - Tune these values according to the values displayed in “Single-shot calibration detection results”. If the displayed values are frequently higher than the setting values, you have to set larger ones.
-                ![](images/image-20241007-042232.png)
+            - 030deg → radial: 2, rational: 0
+            - 120deg → radial: 3, rational: 3
+        <!-- - “Data collection” > “Data collection parameters”: tune the values of “max_allowed_max_reprojection_error” and “max_allowed_rms_reprojection_error”   -->
+        <!--     ![](images/image-20241007-023835.png) -->
+        <!--     - In this image, “max_allowed_max_reprojection_error” and “max_allowed_rms_reprojection_error” were set to 1.5 and 1.0, respectively. -->
+        <!--     - Tune these values according to the values displayed in “Single-shot calibration detection results”. If the displayed values are frequently higher than the setting values, you have to set larger ones. -->
+        <!--         ![](images/image-20241007-042232.png) -->
     4. Move the target chessboard slowly until almost all of the cells become red. Including multiple board angles and poses also assists in the generation of accurate intrinsic parameters. Moving the camera instead of the board is also possible.
 
     5. Once almost all cells turn red, click “Calibration control” > “Calibrate”. When the “calibration status changes from “calibrating” to “idle”, click “Save”.
@@ -196,7 +198,7 @@ After pressing the “Save” button on the GUI, you should see `<camera_name>_i
         distortion_coefficients:
         rows: 1
         -  cols: 5
-        +  cols: 14  # <- increase the number of coefficients to handle large distortion
+        +  cols: 8  # <- increase the number of coefficients to handle large distortion
         ```
 2. Copy the modified file to the corresponding ECU. The ECU camera assignment is as follows:
     - ECU0: camera0, 1, 2, and 3
