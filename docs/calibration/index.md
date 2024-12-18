@@ -248,31 +248,23 @@ source ./install/setup.bash
 > This exact tag needs to be mounted to the frame in the illustrated orientation:
 > ![](images/extrinsic_calib_target.png)
 
+```shell
+# SSH into the ECU that target sensors are connected
+#
+# The following commands are executed on the ECU
+# stop ros-related service
+sudo systemctl stop drs_launch.service
+# manually execute ros-related function without TF broadcasting
+source /opt/autoware/env/autoware.env
+source ~/data_recording_system/install/setup.bash
+ros2 launch drs_launch drs.launch.xml publish_tf:=false
+```
+
 2. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.
-- For the front LiDAR:
-    ```
-    ros2 launch drs_launch drs_seyond.launch.xml \
-    lidar_position:=front lidar_model:=Falcon \
-    live_sensor:=false sensor_ip:=192.168.2.201 host_ip:=192.168.2.1
-    ```
-- For the right LiDAR:
-    ```
-    ros2 launch drs_launch drs_seyond.launch.xml \
-    lidar_position:=right lidar_model:=RobinW \
-    live_sensor:=false sensor_ip:=192.168.3.203 host_ip:=192.168.3.1
-    ```
-- For the rear LiDAR:
-    ```
-    ros2 launch drs_launch drs_seyond.launch.xml \
-    lidar_position:=rear lidar_model:=Falcon \
-    live_sensor:=false sensor_ip:=192.168.2.202 host_ip:=192.168.2.2
-    ```
-- For the left LiDAR:
-    ```
-    ros2 launch drs_launch drs_seyond.launch.xml \
-    lidar_position:=left lidar_model:=RobinW \
-    live_sensor:=false sensor_ip:=192.168.3.204 host_ip:=192.168.3.2 
-    ```
+```shell
+source data_recording_system/install/setup.bash
+ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
+```
 
 3. Execute the tool
     ```shell
