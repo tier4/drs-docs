@@ -95,6 +95,7 @@ Tool reference document: [intrinsic_camera_calibrator.md](https://github.com/tie
     source ./install/setup.bash
     ```
 2. Execute the tool
+<a name="execute_intrinsic_tool"></a>
 - For C2-30 (camera0, camera4)
     ```
     ros2 run intrinsic_camera_calibrator camera_calibrator \
@@ -141,6 +142,33 @@ Tool reference document: [intrinsic_camera_calibrator.md](https://github.com/tie
         - After you confirm the results are saved, close the main window by pressing the close button on the window title bar. 
 
 ## Confirmation and refinement
+### Confirm the result
+reference: https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/intrinsic_camera_calibrator.md#12-evaluation
+
+1. Execute the tool same as [here](#execute_intrinsic_tool).
+
+2. Switch the tool to the evaluation mode
+   1. On the first dialog:  
+      ![](images/intrinsic_eval_1st_diag.png)
+      - Set "Source options" to Image files
+      - Set "Parameters Profile" to Ceres Calib
+      - Click "Load Intrinsics" and select saved result yaml file. Once the result yaml file is loaded, Evaluation mode in the "Mode options" becomes enabled.
+      - Then, press "Start"
+
+  2. On the second dialog:  
+      ![](images/intrinsic_eval_2nd_diag.png)
+      - Press "Select images files". In file selection dialog, select image files that were taken by the camera to be evaluated. As an example for the selection, the folder that you selected to save the intrinsic calibration results also contains a sub folder named `evaluation_images/`, and that sub folder contains sampled images from the camera.
+      - Check "Loop images" option
+      - Then, press "Ok"
+
+  3. On the main window:  
+     ![](images/intrinsic_eval_main_window.png)
+     - Set "Mode options" > "Image view type" to `Source rectified`
+     - Set "Visualization options" > "Undistortion alpha" to `1.00`
+     - Once the undistortion alpha is set, a rectified image with blank area will be shown. You can briefly check the intrinsic result quality by checking the shape of this blank area. If the shape looks roughly symmetric and the image stretches toward corners (i.e., the result image stretches like an X shape), intrinsic calibration was possibly succeeded (we can say "not bad" at least). 
+     - If a completely asymmetric result like the following is shown, there is a high possibility that intrinsic calibration went wrong. In that case, consider redoing the calibration process or refining data introduced in the next section. ![A bad intrinsic example](images/intrinsic_eval_bad_example.png)
+
+### Refinement
 1. Open the folder named `training_images` that exists under the folder where you saved the results ( `/tmp/camera_x`).
 
 2. Check all of the images saved in the folder. If you find images that have (motion) blur on the target board, remove the images from the folder.
