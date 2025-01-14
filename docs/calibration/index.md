@@ -412,7 +412,7 @@ ros2 bag reindex .
 3. Execute the tool
 ```shell
 # terminal 1: Run DRS offline launcher for decoding LiDAR packets
-ros2 launch drs_launch drs_offline.launch.xml
+ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
 # terminal 2: Run calibration tool
 ros2 run sensor_calibration_manager sensor_calibration_manager
 ```
@@ -442,6 +442,10 @@ ros2 run sensor_calibration_manager sensor_calibration_manager
         ![](images/image-20241127-133557.png)
     - Wait until playing finishes
 
+    > [!NOTE]
+    > Because the calibration tool automatically controls pausing/resuming play according to the processing status,
+    > you must not control pausing/resuming rosbag play manually.
+
 6. Once the rosbag has finished playing, execute the following to notify the tools that the end of the data has been reached:
     ```
     ros2 service call /stop_mapping std_srvs/srv/Empty  
@@ -449,7 +453,39 @@ ros2 run sensor_calibration_manager sensor_calibration_manager
 7. After calling the above service, the tool starts alignment (this may take a while). Once the alignment finishes, the “Save calibration” button on the third dialog will become available. If the button is enabled, press it and save the result.
     ![](images/image-20241127-142231.png)
 
-8. Copy the resulting file to **both** ECUs with the proper renaming.
+## Result confirmation
+1. broadcast the calibration result TF one by one
+   ```bash
+   ros2 launch drs_launch tf_publisher.launch.py \
+     publish_camera_optical_link:=false \
+     target_frame:=lidar_front \
+     tf_file_path:=<PATH_TO_THE_SAVED_RESULT>
+   ```
+   ```bash
+   ros2 launch drs_launch tf_publisher.launch.py \
+     publish_camera_optical_link:=false \
+     target_frame:=lidar_right \
+     tf_file_path:=<PATH_TO_THE_SAVED_RESULT>
+   ```
+   ```bash
+   ros2 launch drs_launch tf_publisher.launch.py \
+     publish_camera_optical_link:=false \
+     target_frame:=lidar_rear \
+     tf_file_path:=<PATH_TO_THE_SAVED_RESULT>
+   ```
+   ```bash
+   ros2 launch drs_launch tf_publisher.launch.py \
+     publish_camera_optical_link:=false \
+     target_frame:=lidar_left \
+     tf_file_path:=<PATH_TO_THE_SAVED_RESULT>
+   ```
+
+2. Open RViz and visualize each LiDAR's frame to check positional relationship making sense.
+   Tune parameters (parameters can be set in `calibration_tools/src/calibration_tools/sensor_calibration_manager/launch/drs/mapping_based_lidar_lidar_calibrator.launch.xml`. for more detail, see [here](https://github.com/tier4/CalibrationTools/blob/feat/drs/calibrators/mapping_based_calibrator/README.md#parameters)) and rerun calibration process if displayed frames obviously face the wrong direction compared with the physical equipped status.
+![](images/lidar_lidar_result_confirmation.png)
+
+## Put the result to the right place
+1. Copy the resulting file to **both** ECUs with the proper renaming.
    - Because the file will be used in ECU0 and ECU1, please make sure to copy to both.
    - Rename the result file to `drs_base_link_to_lidars.yaml`
    - The replacement target looks like:
