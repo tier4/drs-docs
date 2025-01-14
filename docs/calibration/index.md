@@ -33,11 +33,11 @@ The calibration process requires some components of the DRS package to be built 
 cd data_recording_system
 mkdir src
 vcs import src < autoware.repos
-rosdep install -y -r --from-paths `colcon list --packages-up-to drs_launch -p` --ignore-src
+rosdep install -y -r --from-paths `colcon list --packages-up-to drs_launch pointcloud_concatenate -p` --ignore-src
 # build required packages
 colcon build \
     --symlink-install --continue-on-error --cmake-args -DCMAKE_BUILD_TYPE=Release \
-    --packages-up-to drs_launch
+    --packages-up-to drs_launch pointcloud_concatenate
 ```
 ## Install calibration tool
 
