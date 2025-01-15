@@ -71,10 +71,10 @@
 
 # LiDAR/camera timestamp consistency
 - login to the each ECU
-- open multiple terminals and execute the following commands to compare topic timestamps
-  ```shell
-  ros2 topic echo --field header.stamp <target_topic> 
-  ```
+- take a rosbag containing all LiDARs (`nebula_packets`) and cameras (`camera_info`)connected to the ECU for approx. 10 seconds
+  - Ex. in case of ECU#1, the rosbag will contain `/sensing/lidar/(front|right)/nebula_packets` and `/sensing/camera/camera(0|1|2|3)/camera_info`
+- copy the rosbag to your PC and play it with `ros2 launch drs_launch drs_offlline.launch.xml`
+- Open multiple terminals and compare the timestamp of all `nebula_points` and `camera_info`
 - Check all LiDARs and cameras have almost similar timestamp between +- 200ms
 
 # LiDAR-LiDAR calibration accuracy
