@@ -64,6 +64,10 @@
   ```shell
   ros2 topic echo --field header.stamp <target_topic>
   ```
+- For LiDAR data, you need to check timestamps for `nebula_points` rather than `nebula_packets`
+  - connect a PC to the ROS network
+  - `ros2 launch drs_launch drs_offline.launch`
+  - Now, you should be able to see `nebula_points` in your PC
 
 # LiDAR/camera timestamp consistency
 - login to the each ECU
