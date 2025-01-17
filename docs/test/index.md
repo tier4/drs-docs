@@ -87,9 +87,18 @@ Sample RViz configration can be found [here](samples/lidar_lidar.rviz)
   - Confirm that the points for the objects around the vehicle overlap precisely.
 
 # LiDAR-camera calibration accuracy
+- clone tool
+  ```shell
+  git clone git@github.com:tier4/data_collection_tools.git
+  ```
+- Launch `drs_offline.launch.xml` to execute lidar decoders
+  ```shell
+  ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
+  ```
 - Project LiDAR points on the image and check LiDAR points for the static objects are overlapped onto the same object in the image.
   - ref: https://github.com/tier4/data_collection_tools/tree/main/data_collection_tools#project-point
   ```shell
+  cd data_collection_tools/data_collection_tools
   python project_point.py -i CAMERA_TOPIC -p LIDAR_TOPIC --image_sync_offset OFFSET --image_timestamp_delay DELAY --show_timestamp 
   ```
     - `image_sync_offset`: Time in ms of points timestamp from image points timestamp.
