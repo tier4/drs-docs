@@ -78,6 +78,8 @@
 - Check all LiDARs and cameras have almost similar timestamp between +- 200ms
 
 # LiDAR-LiDAR calibration accuracy
+Sample RViz configration can be found [here](samples/lidar_lidar.rviz)
+
 - confirm z-value of pointclouds near the ground is almost zero
   - If not the case, tune z translation value of `base_link` -> `drs_base_link`
 
