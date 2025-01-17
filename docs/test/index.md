@@ -92,6 +92,10 @@ Sample RViz configration can be found [here](samples/lidar_lidar.rviz)
   ```shell
   python project_point.py -i CAMERA_TOPIC -p LIDAR_TOPIC --image_sync_offset OFFSET --image_timestamp_delay DELAY --show_timestamp 
   ```
+    - `image_sync_offset`: Time in ms of points timestamp from image points timestamp.
+      - `image_sync_offset = LiDAR timestamp - Camera trigger timestamp`
+    - `image_timestamp_delay`: Specify the delay time (in image timestamp) for camera data transfer in ms. e.g. -20ms for C1 camera
+      - If `timestamp_offset` is used in individual params, `image_timestamp_delay` is 0ms.
 
 - Swing a bar in front of the camera and LiDAR and confirm LiDAR points for the bar are precisely projected onto the bar in the image.
 
