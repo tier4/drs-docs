@@ -91,8 +91,9 @@ Sample RViz configration can be found [here](samples/lidar_lidar.rviz)
   ```shell
   git clone git@github.com:tier4/data_collection_tools.git
   ```
-- Launch `drs_offline.launch.xml` to execute lidar decoders
+- Launch `drs_offline.launch.xml` to execute lidar decoders. Ensure that the `data_recording_system` project is built on the laptop.
   ```shell
+  source data_recording_system/install/setup.bash
   ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
   ```
 - Project LiDAR points on the image and check LiDAR points for the static objects are overlapped onto the same object in the image.
