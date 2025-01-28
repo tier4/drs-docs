@@ -5,9 +5,14 @@ DRS calibration
   - [Install calibration tool](#install-calibration-tool)
 - [Camera intrinsic calibration](#camera-intrinsic-calibration)
   - [Confirmation and refinement](#confirmation-and-refinement)
+    - [Confirm the result](#confirm-the-result)
+    - [Refinement](#refinement)
   - [Save the result](#save-the-result)
 - [Camera-LiDAR extrinsic calibration](#camera-lidar-extrinsic-calibration)
 - [LiDAR-LiDAR calibration](#lidar-lidar-calibration)
+  - [Result confirmation](#result-confirmation)
+  - [Put the result to the right place](#put-the-result-to-the-right-place)
+- [Design values between `base_link` and `drs_base_link`](#design-values-between-base_link-and-drs_base_link)
 - [Related articles](#related-articles)
 
 # Setup
@@ -79,7 +84,7 @@ rosdep install -y -r --from-paths \
   `colcon list --packages-up-to sensor_calibration_tools -p` \
    --ignore-src
 # build the tools
-​colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release \
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release \
   --packages-up-to sensor_calibration_tools
 ```
 
