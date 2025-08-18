@@ -342,11 +342,11 @@ Tool reference document: [tag_based_pnp_calibrator.md](https://github.com/tier4/
     
     b. from ECU  
 
-        ```shell
-        # SSH into the ECU that target sensors are connected
-        # example ECU0: ssh nvidia@192.168.20.1 
-        sudo systemctl stop drs-sensor.service
-        ```
+    ```shell
+    # SSH into the ECU that target sensors are connected
+    # example ECU0: ssh nvidia@192.168.20.1 
+    sudo systemctl stop drs-sensor.service
+    ```
 
 2. Launch ros-related function without TF broadcasting on ECU
     ```shell
