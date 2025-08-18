@@ -1,8 +1,13 @@
 DRS calibration
 ---
 - [Setup](#setup)
-  - [Install required DRS components (on the setup PC)](#install-required-drs-components-on-the-setup-pc)
-  - [Install calibration tool](#install-calibration-tool)
+  - [Prerequisites](#prerequisites)
+  - [Using Docker (Recommended)](#using-docker-recommended)
+    - [For DRS components](#for-drs-components)
+    - [For Calibration tool](#for-calibration-tool)
+  - [Building from source](#building-from-source)
+    - [Install required DRS components (on the setup PC)](#install-required-drs-components-on-the-setup-pc)
+    - [Install calibration tool](#install-calibration-tool)
 - [Camera intrinsic calibration](#camera-intrinsic-calibration)
   - [Confirmation and refinement](#confirmation-and-refinement)
     - [Confirm the result](#confirm-the-result)
@@ -26,7 +31,57 @@ The correction configuration to calibrate the sensors connected to DRS ECU0 is i
 
 ![](images/drs_calibration_connection_diagram.svg)
 
-## Install required DRS components (on the setup PC)
+## Prerequisites
+
+* **OS**: Ubuntu 22.04
+
+* **ROS**: ROS 2 Humble
+
+* **DDS**: cyclonedds
+  * DRS uses [CycloneDDS](https://github.com/eclipse-cyclonedds/cyclonedds) as DDS middleware. Particular configurations for the DDS are required on the PC on which the calibration tools run so that the pc and DRS ECUs communicate smoothly.
+
+  * Install with: `sudo apt install ros-humble-rmw-cyclonedds-cpp`
+
+  * For configuration details, see: [DDS settings](https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/network-configuration/dds-settings/)
+
+* **CUDA**: CUDA Toolkit 12.6
+
+* **Data Recording System**: Clone the git repository: `git clone https://github.com/tier4/data_recording_system.git`  
+  > [!NOTE] Development branch: develop/r36.4.0
+
+
+There are two ways to set up the required environment: using Docker (recommended) or building from source locall
+
+## Using Docker (Recommended)
+
+Before proceeding, ensure you have the following installed:
+
+* **Docker**: Follow the installation guide for Ubuntu [here](https://docs.docker.com/engine/install/ubuntu/).
+
+* **NVIDIA Container Toolkit**: Follow the installation guide [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
+
+### For DRS components
+
+For the DRS components, pull the docker image and launch the container.
+
+```shell
+docker pull ghcr.io/tier4/drs-runtime
+./data_recording_system/docker/runtime/run.sh bash
+```
+
+
+### For Calibration tool
+
+For the calibration tool, pull the docker image and launch the container.
+
+```shell
+docker pull ghcr.io/tier4/drs-calibration
+./data_recording_system/docker/calibration/run.sh bash
+```
+
+## Building from source
+
+### Install required DRS components (on the setup PC)
 
 The calibration process requires some components of the DRS package to be built locally. As we will run the calibration tools on a separate connected PC, the following DRS components must be installed manually.
 
@@ -38,13 +93,13 @@ The calibration process requires some components of the DRS package to be built 
 cd data_recording_system
 mkdir src
 vcs import src < autoware.repos
-rosdep install -y -r --from-paths `colcon list --packages-up-to drs_launch pointcloud_concatenate -p` --ignore-src
+rosdep install -y -r --from-paths `colcon list --packages-up-to drs_launch -p` --ignore-src
 # build required packages
 colcon build \
-    --symlink-install --continue-on-error --cmake-args -DCMAKE_BUILD_TYPE=Release \
-    --packages-up-to drs_launch pointcloud_concatenate
+    --symlink-install --continue-on-error --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    --packages-up-to drs_launch 
 ```
-## Install calibration tool
+### Install calibration tool
 
 ```shell
 # download tools and dependent packages
@@ -84,11 +139,9 @@ rosdep install -y -r --from-paths \
   `colcon list --packages-up-to sensor_calibration_tools -p` \
    --ignore-src
 # build the tools
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release \
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   --packages-up-to sensor_calibration_tools
 ```
-
-DRS uses [CycloneDDS](https://github.com/eclipse-cyclonedds/cyclonedds) as DDS middleware. Particular configurations for the DDS are required on the PC on which the calibration tools run so that the pc and DRS ECUs communicate smoothly. See [here](https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/network-configuration/dds-settings/#tune-dds-settings) in detail.Note that the cyclonedds ROS2 middleware can be installed by `apt install ros-humble-rmw-cyclonedds-cpp`.
 
 
 # Camera intrinsic calibration
@@ -270,37 +323,50 @@ After pressing the “Save” button on the GUI, you should see `<camera_name>_i
 # Camera-LiDAR extrinsic calibration
 Tool reference document: [tag_based_pnp_calibrator.md](https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/tag_based_pnp_calibrator.md)
 
-1. Preparation
-```shell
-cd calibration_tools
-source ./install/setup.bash
-```
-
 > [!NOTE]
 > The following calibration procedure assumes specific ID and orientation for the target April tag.
 > This exact tag needs to be mounted to the frame in the illustrated orientation:
 > ![](images/extrinsic_calib_target.png)
 
-```shell
-# SSH into the ECU that target sensors are connected
-#
-# The following commands are executed on the ECU
-# stop ros-related service
-sudo systemctl stop drs_launch.service
-# manually execute ros-related function without TF broadcasting
-source /opt/autoware/env/autoware.env
-source ~/data_recording_system/install/setup.bash
-ros2 launch drs_launch drs.launch.xml publish_tf:=false
-```
+1. Stop the senosrs from dashboard and launch ros-related function without TF broadcasting
+    1. Access to WiFi access points in the vehicle  
+      access point name: drs-[vehicle name]-ap  
+      Passwords will be notified separately using a secure method.
+    
+    2. Open http://drs-dashboard:3000
+
+    3. Stop sensor service for ECU0 and ECU1  
+        ![](images/dashboard-stop-sensor.png)
+    
+    4. Launch ros-related function without TF broadcasting
+        ```shell
+        # SSH into the ECU that target sensors are connected
+        # example ECU0: ssh nvidia@192.168.20.1 
+        #
+        # manually execute ros-related function without TF broadcasting
+        source /opt/drs/install/setup.bash
+        ros2 launch drs_launch drs.launch.xml publish_tf:=false param_root_dir:=/opt/drs/config/params
+        ```
 
 2. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.
-```shell
-source data_recording_system/install/setup.bash
-ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
-```
+    ```shell
+    # If you choose “Using Docker”
+    source /opt/drs/install/setup.bash
+    ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
+
+    # If you choose “Building from source”
+    source data_recording_system/install/setup.bash
+    ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
+    ```
 
 3. Execute the tool
     ```shell
+    # If you choose “Using Docker”
+    source /opt/drs/install/setup.bash
+    ros2 run sensor_calibration_manager sensor_calibration_manager
+
+    # If you choose “Building from source”
+    source calibration_tools/install/setup.bash
     ros2 run sensor_calibration_manager sensor_calibration_manager
     ```
 4. Perform calibration for each camera-LiDAR pair
@@ -315,8 +381,8 @@ ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
         - Select the target camera name in “camera_name”. The correct corresponding LiDAR will be chosen by the tool.
         - Then, press “Launch”. After pressing the button, 3 popup windows will appear.
 
-    3. UI preparation
-        1. In the “Image view” window, select Current /tf for “TF source”
+    3. UI preparation  
+        1. In the “Image view” window, select Current /tf for “TF source” and Pixels for "Marker units"  
             ![](images/image-20241121-112246.png)
         2. In the Rviz window, insert the appropriate LiDAR frame (e.g. `lidar_front` for the front LiDAR) for “Global Options > Fixed Frame”.  
             ![](images/image-20241121-112752.png)
@@ -328,7 +394,7 @@ ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
                 ![](images/image-20241121-114001.png)
         5. Move the board so that the location of detected pairs covers as wide an area of sensor FoV as possible. During this process, keep an eye on the value of `crossvalidation_reprojection_error`. If this value gets extremely high (like over 10), there may be an issue (e.g., published `camera_info` is not the proper (calibrated) one). 
             ![](images/image-20241121-121943.png)
-        6. When the number of detected pairs is over the predefined value, the “Save calibration” button will become available. After collecting sufficient data, press the button and save the result into a yaml file. After confirming that the result is correctly saved, close all windows. 
+        6. When the number of detected pairs is over the predefined value(14), the “Save calibration” button will become available. After collecting sufficient data, press the button and save the result into a yaml file. After confirming that the result is correctly saved, close all windows. 
             ![](images/image-20241121-122343.png)
 
     <details>
