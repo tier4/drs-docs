@@ -325,33 +325,42 @@ Tool reference document: [tag_based_pnp_calibrator.md](https://github.com/tier4/
 
 > [!NOTE]
 > The following calibration procedure assumes specific ID and orientation for the target April tag.
-> This exact tag needs to be mounted to the frame in the illustrated orientation:
+> This exact tag needs to be mounted to the frame in the illustrated orientation:  
 > ![](images/extrinsic_calib_target.png)
 
-1. Stop the senosrs from dashboard and launch ros-related function without TF broadcasting
-    1. Access to WiFi access points in the vehicle  
-      access point name: drs-[vehicle name]-ap  
-      Passwords will be notified separately using a secure method.
-    
-    2. Open http://drs-dashboard:3000
+1. Stop the senosrs  
+    a. from dashboard  
 
-    3. Stop sensor service for ECU0 and ECU1  
-        ![](images/dashboard-stop-sensor.png)
+        1. Access to WiFi access points in the vehicle  
+           access point name: drs-[vehicle name]-ap  
+           Passwords will be notified separately using a secure method.
+        
+        2. Open http://drs-dashboard:3000
+
+        3. Stop sensor service for ECU0 and ECU1  
+    ![](images/dashboard-stop-sensor.png)
     
-    4. Launch ros-related function without TF broadcasting
+    b. from ECU  
+
         ```shell
         # SSH into the ECU that target sensors are connected
         # example ECU0: ssh nvidia@192.168.20.1 
-        #
-        # manually execute ros-related function without TF broadcasting
-        source /opt/drs/install/setup.bash
-        ros2 launch drs_launch drs.launch.xml publish_tf:=false param_root_dir:=/opt/drs/config/params
+        sudo systemctl stop drs-sensor.service
         ```
 
-2. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.
+2. Launch ros-related function without TF broadcasting on ECU
+    ```shell
+    # SSH into the ECU that target sensors are connected
+    # example ECU0: ssh nvidia@192.168.20.1 
+    #
+    # manually execute ros-related function without TF broadcasting
+    source /opt/drs/install/setup.bash
+    ros2 launch drs_launch drs.launch.xml publish_tf:=false param_root_dir:=/opt/drs/config/params
+    ```
+
+3. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.
     ```shell
     # If you choose “Using Docker”
-    source /opt/drs/install/setup.bash
     ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
 
     # If you choose “Building from source”
@@ -359,17 +368,16 @@ Tool reference document: [tag_based_pnp_calibrator.md](https://github.com/tier4/
     ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
     ```
 
-3. Execute the tool
+4. Execute the tool
     ```shell
     # If you choose “Using Docker”
-    source /opt/drs/install/setup.bash
     ros2 run sensor_calibration_manager sensor_calibration_manager
 
     # If you choose “Building from source”
     source calibration_tools/install/setup.bash
     ros2 run sensor_calibration_manager sensor_calibration_manager
     ```
-4. Perform calibration for each camera-LiDAR pair
+5. Perform calibration for each camera-LiDAR pair
     1. On the first dialog:  
         ![](images/image-20241120-124937.png)
         - Select drs for “Project”
@@ -422,7 +430,7 @@ Tool reference document: [tag_based_pnp_calibrator.md](https://github.com/tier4/
     </details>
 
 
-5. Copy the resulting file to the corresponding ECU with the proper renaming.
+6. Copy the resulting file to the corresponding ECU with the proper renaming.
     - Rename the file to `camera<CAMERA_ID>_calibration_results.yaml`
     - The replacement target looks like:
       ```bash
