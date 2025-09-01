@@ -50,6 +50,8 @@ There are two ways to set up the required environment: using Docker (recommended
 * **Data Recording System**: Clone the git repository: `git clone https://github.com/tier4/data_recording_system.git -b develop/r36.4.0`  
   > [!NOTE] Development branch: develop/r36.4.0
 
+* Operation confirmed on a laptop with: CPU: Core i7-11800H, RAM: 32GB, GPU: RTX 3060 Mobile.
+
 ### For DRS components (runtime docker container)
 
 The calibration process requires some components of the DRS package. So in order to install & run the DRS components, execute the below script.
@@ -86,6 +88,8 @@ Please modify the directory according to your usage environment.
   * For configuration details, see: [DDS settings](https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/network-configuration/dds-settings/)
 
 * **CUDA**: CUDA Toolkit 12.6
+
+* Operation confirmed on a laptop with: CPU: Core i7-11800H, RAM: 32GB, GPU: RTX 3060 Mobile.
 
 ### Install required DRS components
 
