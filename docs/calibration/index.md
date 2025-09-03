@@ -54,7 +54,7 @@ There are two ways to set up the required environment: using Docker (recommended
 
 ### For DRS components (runtime docker container)
 
-The calibration process requires some components of the DRS package. So in order to install & run the DRS components, execute the below script.
+The calibration process requires some components of the DRS package. Those components are available in the runtime docker container launched by the below command.
 
 ```shell
 ./data_recording_system/docker/runtime/run.sh bash
@@ -63,8 +63,8 @@ The calibration process requires some components of the DRS package. So in order
 
 ### For calibration tool (calibration docker container)
 
-For the calibration tool, execute the below script.
-The command line option is to mount the host home directory to /home/data in order to save the calibration results outside the docker container.
+The calibration tool is available in the calibration docker container launched by the below command.
+The command line option is to mount the host directory to /tmp/calib to save the calibration results outside the docker container.
 Please modify the directory according to your usage environment.
 
 ```shell
@@ -458,6 +458,20 @@ Tool reference document: [tag_based_pnp_calibrator.md](https://github.com/tier4/
         5. Move the board so that the location of detected pairs covers as wide an area of sensor FoV as possible. During this process, keep an eye on the value of `crossvalidation_reprojection_error`. If this value gets extremely high (like over 10), there may be an issue (e.g., published `camera_info` is not the proper (calibrated) one). 
             ![](images/image-20241121-121943.png)
         6. When the number of detected pairs is over the predefined value(14), the “Save calibration” button will become available. After collecting sufficient data, press the button and save the result into a yaml file. After confirming that the result is correctly saved, close all windows. 
+            - Rename the file to `camera<CAMERA_ID>_calibration_results.yaml`
+            - In a later step, these results will be used to make `multi_tf_static.yaml`.
+            - The replacement target looks like:
+            ```bash
+            [temporary_diretory]
+            ├── camera0_calibration_results.yaml
+            ├── camera1_calibration_results.yaml
+            ├── camera2_calibration_results.yaml
+            ├── camera3_calibration_results.yaml
+            ├── camera4_calibration_results.yaml
+            ├── camera5_calibration_results.yaml
+            ├── camera6_calibration_results.yaml
+            └── camera7_calibration_results.yaml
+            ```
             ![](images/image-20241121-122343.png)
 
     <details>
@@ -484,54 +498,23 @@ Tool reference document: [tag_based_pnp_calibrator.md](https://github.com/tier4/
     ```
     </details>
 
-
-6. Copy the resulting file to the corresponding ECU with the proper renaming.
-    - Rename the file to `camera<CAMERA_ID>_calibration_results.yaml`
-    - The replacement target looks like:
-      ```bash
-      data_recording_system/src/individual_params/config/default
-      ├── aeva_lidar.param.yaml
-      ├── camera0
-      │   ├── ...
-      │   └── camera0_calibration_results.yaml  # <- for camera0, replace the contents of this file
-      ├── camera1
-      │   ├── ...
-      │   └── camera1_calibration_results.yaml
-      ├── camera2
-      │   ├── ...
-      │   └── camera2_calibration_results.yaml
-      ├── camera3
-      │   ├── ...
-      │   └── camera3_calibration_results.yaml
-      ├── camera4
-      │   ├── ...
-      │   └── camera4_calibration_results.yaml
-      ├── camera5
-      │   ├── ...
-      │   └── camera5_calibration_results.yaml
-      ├── camera6
-      │   ├── ...
-      │   └── camera6_calibration_results.yaml
-      ├── camera7
-      │   ├── ...
-      │   └── camera7_calibration_results.yaml
-      └...
-      ```
-
 # LiDAR-LiDAR calibration
 Tool reference document: [mapping_based_calibrator.md](https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/mapping_based_calibrator.md)
 
 > [!NOTE]
 > The calibration process itself should be run offline because the calculation after recording will take much time (30mins over).
 
-1. Collect data for calibration by the below command. For accurate calibration, a large figure-eight or oval driving trajectory are suitable. Capturing the same static area with all of the LiDARs is key. It is important to use an open area and minimize dynamic objects in the scene.
+1. Collect data for calibration by the below command **on ECU**. For accurate calibration, a large figure-eight or oval driving trajectory are suitable. Capturing the same static area with all of the LiDARs is key. It is important to use an open area and minimize dynamic objects in the scene.
     ```shell
-    # This command records all LiDAR topics to a bag file.
+    # This command records all LiDAR topics to a bag file and should be executed on ECU.
     # Replace [save_directory] with the path where you want to save the bag file.
+
+    # SSH into the ECU that target sensors are connected
+    # example ECU0: ssh nvidia@192.168.20.1 
     ros2 bag record -s mcap /sensing/lidar/front/nebula_packets /sensing/lidar/right/nebula_packets /sensing/lidar/rear/nebula_packets /sensing/lidar/left/nebula_packets -o [save_directory]
     ```
 
-    ![](images/image-20241127-135027.png)
+    ![](images/imgae-2025-09-03-13-45-14.png)
 
 2. Execute the tool
     1. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.  
@@ -586,62 +569,57 @@ Tool reference document: [mapping_based_calibrator.md](https://github.com/tier4/
     ros2 service call /stop_mapping std_srvs/srv/Empty  
     ```
 6. After calling the above service, the tool starts alignment (**this may take a while**). Once the alignment finishes, the “Save calibration” button on the third dialog will become available. If the button is enabled, press it and save the result.
+    - Rename the file to `lidar_calibration_results.yaml`
+    - In the next step, this result is used to make `multi_tf_static.yaml`.
+    - The replacement target looks like:
+    ```bash
+    [temporary_diretory]
+    ├── lidar_calibration_results.yaml # <- save like this
+    ├── camera0_calibration_results.yaml # <- Camera-LiDAR extrinsic calibration results
+    ├── :
+    └── camera7_calibration_results.yaml
+    ```
     ![](images/image-20241127-142231.png)
 
-## Result confirmation
-1. broadcast the calibration result TF one by one
+## Result integration (generate `multi_tf_static.yaml`)
+1. Run the aggregate script
    ```bash
-   ros2 launch drs_launch tf_publisher.launch.py \
-     publish_camera_optical_link:=false \
-     target_frame:=lidar_front \
-     tf_file_path:=<PATH_TO_THE_SAVED_RESULT>
-   ```
-   ```bash
-   ros2 launch drs_launch tf_publisher.launch.py \
-     publish_camera_optical_link:=false \
-     target_frame:=lidar_right \
-     tf_file_path:=<PATH_TO_THE_SAVED_RESULT>
-   ```
-   ```bash
-   ros2 launch drs_launch tf_publisher.launch.py \
-     publish_camera_optical_link:=false \
-     target_frame:=lidar_rear \
-     tf_file_path:=<PATH_TO_THE_SAVED_RESULT>
-   ```
-   ```bash
-   ros2 launch drs_launch tf_publisher.launch.py \
-     publish_camera_optical_link:=false \
-     target_frame:=lidar_left \
-     tf_file_path:=<PATH_TO_THE_SAVED_RESULT>
+   # [temporary_diretory] contains Camera-LiDAR extrinsic calibration results and LiDAR-LiDAR calibration result
+   # `multi_tf_static.yaml` is going to be generated
+   python3 data_recording_system/scripts/aggregate_calibration_files.py [temporary_diretory]
    ```
 
-2. Open RViz and visualize each LiDAR's frame to check positional relationship making sense.
-   Tune parameters (parameters can be set in `calibration_tools/src/calibration_tools/sensor_calibration_manager/launch/drs/mapping_based_lidar_lidar_calibrator.launch.xml`. for more detail, see [here](https://github.com/tier4/CalibrationTools/blob/feat/drs/calibrators/mapping_based_calibrator/README.md#parameters)) and rerun calibration process if displayed frames obviously face the wrong direction compared with the physical equipped status.
-![](images/lidar_lidar_result_confirmation.png)
+2. Check multi_tf_static.yaml if the values of TF between `drs_base_link` and `lidar_*` and `lidar_*` and `camera*0*/camera_link` are correct.  
+  It should be consistent with each calibration result and not be all zeros.
+
+3. Update the value of TF between `base_link` and `drs_base_link` 
+    - In DRS, `base_link` is described as a projected point of the rear-axle center onto the ground surface, while `drs_base_link` stands for the coordinate system origin of the INS module on the roof.
+    - Both have the same coordinate criteria; `x` faces forward of the vehicle, `y` faces left side of the vehicle, and `z` faces the sky.
+    - The following figure depicts an overview of where each coordinate system exists relative to the vehicle.
+    ![](images/base_link.svg)  
+    - There is no need for a precise pose relationship between them, but rough values will be appreciated to enhance the value of collected data by the vehicle. To meet this requirement, fill the pose of the `drs_base_link` relative to the `base_link` with the design values, which are calculated using CAD.
 
 ## Put the result to the right place
-1. Copy the resulting file to **both** ECUs with the proper renaming.
-   - Because the file will be used in ECU0 and ECU1, please make sure to copy to both.
-   - Rename the result file to `drs_base_link_to_lidars.yaml`
+1. Copy the resulting file (`multi_tf_static.yaml`) to the proper place.
    - The replacement target looks like:
 
    ```bash
    data_recording_system/src/individual_params/config/default
-   ├── drs_base_link_to_lidars.yaml # <- replace the contents of this file
+   ├── multi_tf_static.yaml # <- replace the contents of this file
    └...
    ```
 
-# Design values between `base_link` and `drs_base_link` 
-- In DRS, `base_link` is described as a projected point of the rear-axle center onto the ground surface, while `drs_base_link` stands for the coordinate system origin of the INS module on the roof.
-  - Both have the same coordinate criteria; `x` faces forward of the vehicle, `y` faces left side of the vehicle, and `z` faces the sky.
-  - The following figure depicts an overview of where each coordinate system exists relative to the vehicle.
-  ![](images/base_link.svg)  
-- There is no need for a precise pose relationship between them, but rough values will be appreciated to enhance the value of collected data by the vehicle. To meet this requirement, fill the pose of the `drs_base_link` relative to the `base_link` with the design values, which are calculated using CAD. The target file is:
-```bash
-   data_recording_system/src/individual_params/config/default
-   ├── base_link_to_drs_base_link.yaml # <- replace the contents of this file
-   └...
-```
+## Apply Calibration Results to ECUs
+After all calibration results have been confirmed, they need to be applied to the ECUs to be used by the system.
+
+1. **Overwrite the configuration files** Copy the `data_recording_system/src/individual_params/config/default` which you created through the above steps and overwrite the contents of the `/opt/drs/install/individual_params/share/individual_params/config/default` on each ECU.  
+
+2. **Restart the sensors.**
+    ```shell
+    # SSH into the ECU0 and ECU1 that target sensors are connected
+    # example ECU0: ssh nvidia@192.168.20.1 
+    sudo systemctl restart drs-sensor.service
+    ```
 
 # Related articles
 - [https://tier4.atlassian.net/wiki/spaces/~621c20116a4c4c0070ac66d7/pages/3354591916/DRS+calibration]()
