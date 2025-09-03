@@ -19,9 +19,9 @@ DRS calibration
   - [Save the result](#save-the-result)
 - [Camera-LiDAR extrinsic calibration](#camera-lidar-extrinsic-calibration)
 - [LiDAR-LiDAR calibration](#lidar-lidar-calibration)
-  - [Result confirmation](#result-confirmation)
+- [Result integration (generate `multi_tf_static.yaml`)](#Result-integration-generate-multi_tf_staticyaml)
   - [Put the result to the right place](#put-the-result-to-the-right-place)
-- [Design values between `base_link` and `drs_base_link`](#design-values-between-base_link-and-drs_base_link)
+- [Apply Calibration Results to ECUs](#Apply-Calibration-Results-to-ECUs)
 - [Related articles](#related-articles)
 
 # Setup
@@ -41,6 +41,9 @@ There are two ways to set up the required environment: using Docker (recommended
 
 ### Prerequisites for using docker
 
+> [!NOTE]
+> Currently a development branch is used: develop/r36.4.0
+
 * **OS**: Ubuntu 22.04
 
 * **Docker**: Follow the installation guide for Ubuntu [here](https://docs.docker.com/engine/install/ubuntu/).
@@ -48,7 +51,11 @@ There are two ways to set up the required environment: using Docker (recommended
 * **NVIDIA Container Toolkit**: Follow the installation guide [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
 
 * **Data Recording System**: Clone the git repository: `git clone https://github.com/tier4/data_recording_system.git -b develop/r36.4.0`  
-  > [!NOTE] Development branch: develop/r36.4.0
+
+* **DDS settings**: `cyclonedds.xml` is required for DDS communication between the host PC and ECUs.
+  1. Copy `data_recording_system/docker/cyclonedds.xml` to your home directory.
+  2. Edit the copied file and change the `name` attribute of the `NetworkInterface` to the name of the network interface used for ROS 2 communication (e.g., `enx****`).
+  3. The cyclonedds.xml file will be mounted into the Docker container and used for DDS communication.
 
 * Operation confirmed on a laptop with: CPU: Core i7-11800H, RAM: 32GB, GPU: RTX 3060 Mobile.
 
@@ -85,7 +92,7 @@ Please modify the directory according to your usage environment.
 
   * Install with: `sudo apt install ros-humble-rmw-cyclonedds-cpp`
 
-  * For configuration details, see: [DDS settings](https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/network-configuration/dds-settings/)
+  * For configuration details, see: [DDS settings](https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/network-configuration/dds-settings/), also see: `data_recording_system/docker/cyclonedds.xml` as base setting
 
 * **CUDA**: CUDA Toolkit 12.6
 
@@ -149,7 +156,7 @@ Check each camera from `camera0` to `camera7` sequentially to ensure they are st
     ```
 
 2. On the calibration PC, open a new terminal and use `rqt_image_view` to visualize the image topic for each camera.  
-  If you use docker, please execute it on the runtime docker container.
+  If you use docker, please execute it **on the calibration docker container**.
     ```shell
     ros2 run rqt_image_view rqt_image_view
     ```
@@ -159,6 +166,8 @@ Check each camera from `camera0` to `camera7` sequentially to ensure they are st
     * An image is displayed correctly.
 
     * The camera number in the topic name corresponds to the physical mounting position on the vehicle.
+
+    * Please choose `/sensing/camera/camera*/image_raw` for confirmation. (not `/sensing/camera/camera*/image_raw/compresssed`)
     ![](images/imgae-2025-09-01-17-15-08.png)
 
 ## LiDAR
@@ -412,7 +421,6 @@ Tool reference document: [tag_based_pnp_calibrator.md](https://github.com/tier4/
     # example ECU0: ssh nvidia@192.168.20.1 
     #
     # manually execute ros-related function without TF broadcasting
-    source /opt/drs/install/setup.bash
     ros2 launch drs_launch drs.launch.xml publish_tf:=false param_root_dir:=/opt/drs/config/params
     ```
 
@@ -581,7 +589,7 @@ Tool reference document: [mapping_based_calibrator.md](https://github.com/tier4/
     ```
     ![](images/image-20241127-142231.png)
 
-## Result integration (generate `multi_tf_static.yaml`)
+# Result integration (generate `multi_tf_static.yaml`)
 1. Run the aggregate script
    ```bash
    # [temporary_diretory] contains Camera-LiDAR extrinsic calibration results and LiDAR-LiDAR calibration result
@@ -589,8 +597,7 @@ Tool reference document: [mapping_based_calibrator.md](https://github.com/tier4/
    python3 data_recording_system/scripts/aggregate_calibration_files.py [temporary_diretory]
    ```
 
-2. Check multi_tf_static.yaml if the values of TF between `drs_base_link` and `lidar_*` and `lidar_*` and `camera*0*/camera_link` are correct.  
-  It should be consistent with each calibration result and not be all zeros.
+2. Check the generated multi_tf_static.yaml if the values of TF between `drs_base_link` and `lidar_*`, `lidar_*` and `camera*0*/camera_link` are correct. It should be consistent with each calibration result and not be all zeros.
 
 3. Update the value of TF between `base_link` and `drs_base_link` 
     - In DRS, `base_link` is described as a projected point of the rear-axle center onto the ground surface, while `drs_base_link` stands for the coordinate system origin of the INS module on the roof.
@@ -609,7 +616,7 @@ Tool reference document: [mapping_based_calibrator.md](https://github.com/tier4/
    └...
    ```
 
-## Apply Calibration Results to ECUs
+# Apply Calibration Results to ECUs
 After all calibration results have been confirmed, they need to be applied to the ECUs to be used by the system.
 
 1. **Overwrite the configuration files** Copy the `data_recording_system/src/individual_params/config/default` which you created through the above steps and overwrite the contents of the `/opt/drs/install/individual_params/share/individual_params/config/default` on each ECU.  
