@@ -53,30 +53,37 @@ There are two ways to set up the required environment: using Docker (recommended
 * **Data Recording System**: Clone the git repository: `git clone https://github.com/tier4/data_recording_system.git -b develop/r36.4.0`  
 
 * **DDS settings**: `cyclonedds.xml` is required for DDS communication between the host PC and ECUs.
-  1. Copy `data_recording_system/docker/cyclonedds.xml` to your home directory.
-  2. Edit the copied file and change the `name` attribute of the `NetworkInterface` to the name of the network interface used for ROS 2 communication (e.g., `enx****`).
-  3. The cyclonedds.xml file will be mounted into the Docker container and used for DDS communication.
+  1. Edit `data_recording_system/docker/cyclonedds.xml` to change the `name` attribute of the `NetworkInterface` to the name of the network interface used for ROS 2 communication (e.g., `enx****`).
+  2. The cyclonedds.xml file will be mounted into the Docker container and used for DDS communication.
 
 * Operation confirmed on a laptop with: CPU: Core i7-11800H, RAM: 32GB, GPU: RTX 3060 Mobile.
 
-### For DRS components (runtime docker container)
+### For DRS components (runtime Docker container)
 
-The calibration process requires some components of the DRS package. Those components are available in the runtime docker container launched by the below command.
+The calibration process requires some components of the DRS package. Those components are available in the runtime Docker container launched by the below command.
 
 ```shell
-./data_recording_system/docker/runtime/run.sh bash
+# Start the DRS runtime Docker container.
+# The -v flag mounts the cyclonedds.xml configuration file from the host into the container.
+# Replace [clone_folder] with the actual path to your cloned data_recording_system repository.
+./data_recording_system/docker/runtime/run.sh --option -v [clone_folder]/data_recording_system/docker/cyclonedds.xml:/opt/drs/config/cyclonedds.xml -- bash
 ```
 
 
-### For calibration tool (calibration docker container)
+### For calibration tool (calibration Docker container)
 
-The calibration tool is available in the calibration docker container launched by the below command.
+The calibration tool is available in the calibration Docker container launched by the below command.
 The command line option is to mount the host directory to /tmp/calib to save the calibration results outside the docker container.
 Please modify the directory according to your usage environment.
 
 ```shell
-# This command runs the calibration tool. The calibration result shall be saved to the specified directory on your computer.
-./data_recording_system/docker/calibration/run.sh --option -v [result_saving_directory]:/tmp/calib -- bash
+# Start the calibration Docker container.
+# The first -v flag mounts a host directory ([result_saving_directory]) to /tmp/calib inside the container.
+# This ensures that any calibration results saved to /tmp/calib within the container are persisted on your host machine.
+# Replace [result_saving_directory] with the path where you want to store the results.
+# The second -v flag mounts the cyclonedds.xml configuration file from the host into the container.
+# Replace [clone_folder] with the actual path to your cloned data_recording_system repository.
+./data_recording_system/docker/calibration/run.sh --option -v [result_saving_directory]:/tmp/calib -v [clone_folder]/data_recording_system/docker/cyclonedds.xml:/opt/drs/config/cyclonedds.xml -- bash
 ```
 
 ## Building from source
@@ -156,7 +163,7 @@ Check each camera from `camera0` to `camera7` sequentially to ensure they are st
     ```
 
 2. On the calibration PC, open a new terminal and use `rqt_image_view` to visualize the image topic for each camera.  
-  If you use docker, please execute it **on the calibration docker container**.
+  If you use docker, please execute it **on the calibration Docker container**.
     ```shell
     ros2 run rqt_image_view rqt_image_view
     ```
@@ -175,7 +182,7 @@ Check each camera from `camera0` to `camera7` sequentially to ensure they are st
 Check each LiDAR to ensure that it is publishing point cloud data and that its TF is correctly positioned.
 
 1. On the calibration PC, launch the point cloud decoder with TF publishing enabled.  
-  If you use docker, please execute it on the runtime docker container.
+  If you use docker, please execute it on the runtime Docker container.
     ```shell
     # Assumes you are in the appropriate docker container or have sourced the workspace
     ros2 launch drs_launch drs_offline.launch.xml publish_tf:=true
@@ -425,14 +432,14 @@ Tool reference document: [tag_based_pnp_calibrator.md](https://github.com/tier4/
     ```
 
 3. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.  
-  If you use docker, please execute it on the runtime docker container.
+  If you use docker, please execute it on the runtime Docker container.
     ```shell
     # launch the LiDAR packet decoder 
     ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
     ```
 
 4. Execute the tool on the connected PC.  
-  If you use docker, please execute it on the calibration docker container.
+  If you use docker, please execute it on the calibration Docker container.
     ```shell
     # only if you choose “Building from source”
     source calibration_tools/install/setup.bash
@@ -526,14 +533,14 @@ Tool reference document: [mapping_based_calibrator.md](https://github.com/tier4/
 
 2. Execute the tool
     1. Execute the LiDAR packet decoder on the connected PC where the calibration tool will run. This reduces network load and topic delay.  
-    If you use docker, please execute it on the runtime docker container.
+    If you use docker, please execute it on the runtime Docker container.
         ```shell
         # launch the LiDAR packet decoder 
         ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
         ```
 
     2. Execute the tool on the connected PC.  
-    If you use docker, please execute it on the calibration docker container.
+    If you use docker, please execute it on the calibration Docker container.
         ```shell
         # only if you choose “Building from source”
         source calibration_tools/install/setup.bash
