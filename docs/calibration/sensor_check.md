@@ -6,32 +6,26 @@ Before starting the calibration process, verified that all sensors are functioni
 
 ## 1. Camera Check
 
-Verify that all 8 cameras (`camera0` to `camera7`) are streaming images correctly and match their physical positions.
+| Camera ID | Position |
+| :--- | :--- |
+| **camera0** | Front Narrow |
+| **camera1** | Front Wide |
+| **camera2** | Right Front |
+| **camera3** | Right Rear |
+| **camera4** | Rear Narrow |
+| **camera5** | Rear Wide |
+| **camera6** | Left Rear |
+| **camera7** | Left Front |
 
-### Step 1: Launch Drivers (ECU Side)
-
-Connect to each ECU via SSH and start the sensor service.
-
-| ECU | IP Address | Connected Cameras |
-| :--- | :--- | :--- |
-| **ECU0** | `192.168.20.1` | `camera0`, `camera1`, `camera2`, `camera3` |
-| **ECU1** | `192.168.20.2` | `camera4`, `camera5`, `camera6`, `camera7` |
-
-```bash
-# SSH into the ECU
-ssh nvidia@<ECU_IP_ADDRESS>
-
-# Start the sensor service
-sudo systemctl start drs-sensor.service
-```
-
-### Step 2: Visualize Images (PC Side)
+### Step 1: Visualize Images (PC Side)
 
 On the calibration PC, use `rqt_image_view` to verify the streams.
 
-:::tip
-If you are using Docker, remember to run this command **inside the calibration container**.
-:::
+> [!TIP]
+> If you are using Docker, remember to run this command **inside the calibration container**.
+
+> [!NOTE]
+> Since you are viewing uncompressed image data (`image_raw`), the display frame rate may be lower than the actual capture frame rate due to network bandwidth and processing overhead.
 
 ```bash
 ros2 run rqt_image_view rqt_image_view
@@ -48,26 +42,9 @@ ros2 run rqt_image_view rqt_image_view
 
 ## 2. LiDAR Check
 
-Verify that all LiDARs are publishing point cloud data and their coordinate frames (TF) are correctly aligned.
+Verify that all LiDARs are publishing point cloud data and their coordinate frames (TF) are correctly aligned. It is assumed that the DRS sensor services are already running on the ECUs.
 
-### Step 1: Launch Drivers (ECU Side)
-
-Connect to each ECU via SSH and start the sensor service if it is not already running.
-
-| ECU | IP Address | Connected LiDARs |
-| :--- | :--- | :--- |
-| **ECU0** | `192.168.20.1` | `Front`, `Right` |
-| **ECU1** | `192.168.20.2` | `Rear`, `Left` |
-
-```bash
-# SSH into the ECU
-ssh nvidia@<ECU_IP_ADDRESS>
-
-# Start the sensor service
-sudo systemctl start drs-sensor.service
-```
-
-### Step 2: Launch Decoder (PC Side)
+### Step 1: Launch Decoder (PC Side)
 
 On the calibration PC, launch the point cloud decoder. If using Docker, run this in the **runtime container**.
 
@@ -76,9 +53,15 @@ On the calibration PC, launch the point cloud decoder. If using Docker, run this
 ros2 launch drs_launch drs_offline.launch.xml publish_tf:=true
 ```
 
+> [!NOTE]
+> If you are using the Seyond LiDAR driver, add the argument `lidar_driver_type:=seyond` to the launch command.
+
 ### Step 2: Visualize in RViz2 (PC Side)
 
 Launch RViz2 and configure the displays.
+
+> [!TIP]
+> If you are using Docker, remember to run this command **inside the calibration container**.
 
 ```bash
 rviz2
@@ -86,16 +69,17 @@ rviz2
 
 **Required RViz2 Configuration:**
 
+> [!NOTE]
+> Depending on the driver used, the topic name may be `seyond_points` instead of `nebula_points`.
+
 1.  **Global Options**: Set `Fixed Frame` to `base_link`.
-2.  **PointCloud2 Display**: Add a display for each LiDAR topic (e.g., `/sensing/lidar/front/nebula_points`).
+2.  **PointCloud2 Display**: Add a display for front/right/rear/left LiDAR topics (e.g., `/sensing/lidar/front/nebula_points`).
     -   **Reliability Policy**: `Best Effort`
     -   **Color Transformer**: `FlatColor` (assign a different color to each LiDAR for easy identification).
-3.  **TF Display**: Add a `TF` display to visualize the sensor frames.
 
 **Checklist:**
 - [ ] **Point Cloud Display**: Data is visible for each LiDAR.
 - [ ] **Physical Matching**: The position of the point cloud in 3D space matches the physical mounting position.
-- [ ] **TF Alignment**: The LiDAR frames are positioned correctly relative to `base_link`.
 
 ![LiDAR Check](images/image-2025-09-01-17-37-09.png)
 

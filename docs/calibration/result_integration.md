@@ -13,10 +13,10 @@ After completing camera and LiDAR calibrations, you must merge the resulting YAM
 The DRS repository provides a script to collect all `*.yaml` results from a directory and generate a unified TF file.
 
 ```bash
-# <RESULT_DIR> should contain:
+# /calib should contain:
 # - camera<N>_calibration_results.yaml
 # - lidar_calibration_results.yaml
-python3 data_recording_system/scripts/aggregate_calibration_files.py <RESULT_DIR>
+python3 data_recording_system/scripts/aggregate_calibration_files.py /calib
 ```
 
 ### Step 2: Manual TF Adjustment
@@ -48,9 +48,8 @@ Now, apply the aggregated configuration and the individual camera/LiDAR paramete
 
 Copy the entire `default` configuration folder to the designated directory on each ECU.
 
-:::tip
-Always back up the existing configuration on the ECU before overwriting.
-:::
+> [!TIP]
+> Always back up the existing configuration on the ECU before overwriting.
 
 **Deployment to ECU0 & ECU1:**
 ```bash

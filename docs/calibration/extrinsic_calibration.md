@@ -4,10 +4,9 @@ This page describes the procedure for calibrating the relative pose between the 
 
 Tool reference: [tag_based_pnp_calibrator.md](https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/tag_based_pnp_calibrator.md)
 
-:::info
-This procedure assumes a specific ID and orientation for the AprilTag. Mount and orient the board as shown below:
-![Extrinsic Calibration Target](images/extrinsic_calib_target.png)
-:::
+> [!NOTE]
+> This procedure assumes a specific ID and orientation for the AprilTag. Mount and orient the board as shown below:  
+> ![Extrinsic Calibration Target](images/extrinsic_calib_target.png)
 
 Next step: [Camera-LiDAR Intrinsic Calibration](camera_lidar_intrinsic_calibration.md)
 
@@ -16,25 +15,28 @@ Next step: [Camera-LiDAR Intrinsic Calibration](camera_lidar_intrinsic_calibrati
 ## 1. Preparation
 
 ### ECU Side: Start Sensor Streams
-Calibration requires sensor data without temporary coordinate transformations (TF).
+Calibration requires sensor data without coordinate transformations (TF).
 
-1.  **Stop services**: Use the Dashboard (`http://drs-dashboard:3000`) or SSH to stop `drs-sensor.service`.
-    ![Dashboard](images/dashboard-stop-sensor.png)
-2.  **Launch without TF**: Run the launch file with `publish_tf:=false`.
-    ```bash
-    # SSH into ECU0 or ECU1
-    ros2 launch drs_launch drs.launch.xml publish_tf:=false param_root_dir:=/opt/drs/config/params
-    ```
+```bash
+# SSH into the ECU0 and ECU1 that target sensors are connected
+# example ECU0: ssh nvidia@192.168.20.1 
+sudo systemctl stop drs-sensor.service
+
+# Start DRS services without TF
+ros2 launch drs_launch drs.launch.xml publish_tf:=false param_root_dir:=/opt/drs/config/params
+```
 
 ### PC Side: Launch Decoder & Tool
-1.  **Launch Decoder**: Run the offline decoder to process sensor packets.
+1.  **Launch Decoder (Runtime Container or Local Build Environment)**: Run the offline decoder to process sensor packets.
     ```bash
-    # Inside runtime container or sourced environment
     ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
     ```
-2.  **Launch Tool**: Start the sensor calibration manager.
+
+    > [!NOTE]
+    > If you are using the Seyond LiDAR driver, add the argument `lidar_driver_type:=seyond` to the launch command.
+
+2.  **Launch Tool (Calibration Container or Local Build Environment)**: Start the sensor calibration manager.
     ```bash
-    # Inside calibration container or sourced environment
     ros2 run sensor_calibration_manager sensor_calibration_manager
     ```
 
@@ -46,20 +48,27 @@ Calibration requires sensor data without temporary coordinate transformations (T
 1.  **First Dialog**:
     - **Project**: `drs`
     - **Calibrator**: `tag_based_pnp_calibrator`
+    - Click **Continue**.  
     ![First Dialog](images/image-20241120-124937.png)
 2.  **Second Dialog**:
     - **Camera Name**: Select the target camera (e.g., `camera0`). The tool will automatically select the corresponding LiDAR.
+    - Click **Launch**.  
     ![Second Dialog](images/extrinsic_second_dialog.png)
 
-### Step 2: UI Setup
+### Step 2: UI Setup and start calibration
 Adjust the settings in the tool and RViz:
 
-- **Calibration Tool**:
-    - **TF source**: `/tf`
-    - **Marker units**: `Pixels`
-    - Click **Calibrate**.
-- **RViz2**:
-    - **Fixed Frame**: Set to the appropriate LiDAR frame (e.g., `lidar_front`).
+- **Calibration Tool/Image view**:
+    - **TF source**: `Current /tf`
+    - **Marker units**: `Pixels`  
+    ![Image View](images/image-20241121-112246.png)
+- **Calibration Tool/RViz2**:
+    - **Fixed Frame**: Set to the appropriate LiDAR frame (e.g., `lidar_front`).  
+    ![RViz2](images/image-20241121-112752.png)
+- **Calibration Tool/sensor_calibration_manager**:
+    - Click **Calibrate**.  
+    ![Calibrate](images/image-20241121-113015.png)
+
 
 ### Step 3: Data Collection
 1.  Move the AprilTag board slowly within the sensor field of view.

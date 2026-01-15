@@ -41,41 +41,49 @@ cd data_recording_system
 
 #### 3. Configure DDS (CycloneDDS)
 
-Edit `docker/cyclonedds.xml` to match your network interface.
+In order for the PC to communicate with the ECUs, you must specify the correct network interface name in the DDS configuration.
+
+1.  Find your interface name (e.g., `enp1s0`) using `ip addr` command.
+2.  Edit `docker/cyclonedds.xml`:
 
 ```xml
 <!-- data_recording_system/docker/cyclonedds.xml -->
-<NetworkInterface name="<YOUR_NETWORK_INTERFACE_NAME>"/> <!-- e.g., enp1s0 -->
+<NetworkInterface name="<YOUR_NETWORK_INTERFACE_NAME>" priority="default" multicast="default"/>
 ```
 
 #### 4. Launch Containers
 
 You will need two separate containers: one for runtime components and one for the calibration tool.
 
-:::tip
-Replace `<CLONE_DIR>` with the absolute path to your `data_recording_system` directory.
-:::
-
 **Terminal 1: DRS Runtime Components**
 ```bash
-./data_recording_system/docker/runtime/run.sh \
-  --option -v <CLONE_DIR>/data_recording_system/docker/cyclonedds.xml:/opt/drs/config/cyclonedds.xml \
+# Start the runtime container to handle DRS components
+./docker/runtime/run.sh \
+  --option -v ./docker/cyclonedds.xml:/opt/drs/config/cyclonedds.xml \
   -- bash
 ```
 
 **Terminal 2: Calibration Tool**
 ```bash
-./data_recording_system/docker/calibration/run.sh \
-  --option -v <RESULT_SAVE_DIR>:/tmp/calib \
-  -v <CLONE_DIR>/data_recording_system/docker/cyclonedds.xml:/opt/drs/config/cyclonedds.xml \
+# Start the calibration container to handle calibration tools
+# Replace <HOST_CALIB_DIR> with an absolute path on your PC (e.g., /home/user/drs_calib)
+./docker/calibration/run.sh \
+  --option -v <HOST_CALIB_DIR>:/calib \
+  -v ./docker/cyclonedds.xml:/opt/drs/config/cyclonedds.xml \
   -- bash
 ```
+
+> [!NOTE]
+> The calibration results will be saved to the directory mounted at `/calib`. Ensure this directory `<HOST_CALIB_DIR>` exists on your host machine.
 
 ---
 
 ### Option 2: Building from Source
 
 Use this option if you need to run the tools natively or customize the build.
+
+> [!IMPORTANT]
+> Some dependencies are hosted in private repositories. Ensure that your GitHub account has the necessary permissions to access these repositories.
 
 #### 1. Prerequisites
 
@@ -84,7 +92,7 @@ Use this option if you need to run the tools natively or customize the build.
 | **OS** | Ubuntu 22.04 |
 | **ROS** | ROS 2 Humble |
 | **CUDA** | CUDA Toolkit 12.6 |
-| **Middleware** | `sudo apt install ros-humble-rmw-cyclonedds-cpp` |
+| **Middleware** | `sudo apt install ros-humble-rmw-cyclonedds-cpp` <BR> [DDS Settings](https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/network-configuration/dds-settings/) |
 
 #### 2. Install DRS Components
 
@@ -122,6 +130,7 @@ Add the following to your `~/.bashrc`:
 if [ -f <CLONE_DIR>/data_recording_system/install/setup.bash ]; then
     source <CLONE_DIR>/data_recording_system/install/setup.bash
 fi
+```
 
 ---
 

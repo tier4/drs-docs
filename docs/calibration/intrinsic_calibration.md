@@ -8,26 +8,23 @@ Tool reference: [intrinsic_camera_calibrator.md](https://github.com/tier4/Calibr
 
 ## 1. Preparation & Execution
 
-Open a terminal on the calibration PC and navigate to the tool directory.
+Navigate to the appropriate directory based on your environment:
+- **Docker environment**: `cd /opt/drs`
+- **Local build environment**: `cd <cloned_calibration_tools_dir>`
 
-:::tip
-Ensure the sensor drivers are running on the ECUs (see [Sensor Check](sensor_check.md)).
-:::
+> [!TIP]
+> Ensure the sensor drivers are running on the ECUs (see [Sensor Check](sensor_check.md)).
 
 **Terminal (Inside Calibration Container or Workspace):**
+
 ```bash
-# Docker environment
-cd /opt/drs
+source ./install/setup.bash
 
-# Source environment (if building from source)
-# cd <YOUR_WORKSPACE>/calibration_tools
-# source ./install/setup.bash
-
-# Run for C2-30 (camera0, camera4)
+# Run for C3-30 (camera0, camera4)
 ros2 run intrinsic_camera_calibrator camera_calibrator \
   --config-file ./install/intrinsic_camera_calibrator/share/intrinsic_camera_calibrator/config/intrinsics_calibrator_c2_30.yaml
 
-# Run for C2-120 (camera1, camera2, camera3, camera5, camera6, camera7)
+# Run for C2-120 and C3-120 (camera1, camera2, camera3, camera5, camera6, camera7)
 ros2 run intrinsic_camera_calibrator camera_calibrator \
   --config-file ./install/intrinsic_camera_calibrator/share/intrinsic_camera_calibrator/config/intrinsics_calibrator_c2_120.yaml
 ```
@@ -40,39 +37,39 @@ Follow these steps for each camera:
 
 ### Step 1: Initialization
 1.  **First Dialog**:
+    - **Source options**: `ROS topics`
     - **Board options**: `Chess board`
     - **Parameters Profile**: `Ceres Intrinsics Calibrator`
-    - Click **Start**.
+    - Click **Start**.  
     ![First Dialog](images/1st_diag.png)
 2.  **Second Dialog**:
-    - **Source options**: `Ros topics`
-    - **Topic**: Select the target camera topic (e.g., `/sensing/camera/camera0/image_raw`).
+    - **Topic**: Select the target camera topic (e.g., `/sensing/camera/camera1/image_raw/compressed`).
     - **QoS Reliability**: `BEST_EFFORT`
     - **QoS Durability**: `VOLATILE`
-    - Click **Ok**.
+    - Click **Ok**.  
     ![Second Dialog](images/2nd_diag.png)
 
 ### Step 2: Main Window Configuration
-In the Main Window, adjust the following settings:
-
+In the Main Window, adjust the following settings:  
+![Main Window](images/image-20241007-020030.png)
 1.  **Visualization options**:
     - Check **Draw training occupancy**.
     - Set **Drawings alpha** to `0.3`.
 2.  **Calibration parameters**:
     Set the coefficients based on the camera's Field of View (FoV).
 
-| Camera Type | Radial Distortion | Rational Distortion |
-| :--- | :--- | :--- |
-| **30° (C2-30)** | `2` | `0` |
-| **120° (C2-120)** | `3` | `3` |
+    | Camera Type | Radial Distortion | Rational Distortion |
+    | :--- | :--- | :--- |
+    | **30° (C3-30)** | `2` | `0` |
+    | **120° (C2-120/C3-120)** | `3` | `3` |
 
-![Calibration Parameters](images/image-20241007-023441.png)
+    ![Calibration Parameters](images/image-20241007-023441.png)
 
 ### Step 3: Data Collection & Calculation
 1.  **Move the Chessboard**: Move the board slowly to cover the entire field of view. Aim to turn all occupancy cells red.
 2.  **Calibrate**: Click **Calibration control** > **Calibrate**.
 3.  **Save Results**: Once status is "idle", click **Save**.
-    - Select a temporary folder (e.g., `/tmp/calib/camera<N>`).
+    - Select a directory (e.g., `/calib/camera<N>`).    
     ![Save Results](images/image-20241007-042940.png)
 
 ---
@@ -81,15 +78,25 @@ In the Main Window, adjust the following settings:
 
 ### Step 1: Confirm the Result (Evaluation Mode)
 1. Execute the tool again but select **Image files** in the first dialog.
-2. Click **Load Intrinsics** and select the saved `*_info.yaml`.
-3. Select the images in the `evaluation_images/` folder.
-4. Set **Image view type** to `Source rectified`.
-5. **Success Criteria**: The rectified image should look roughly symmetric. If it looks distorted (e.g., asymmetric X-shape), you need to refine the data.
+2. Click **Load Intrinsics** and select the saved `*_info.yaml` at `/calib/camera<N>`.
+3. Click **Start**.  
+  ![First Dialog](images/intrinsic_eval_1st_diag.png)
+4. Select the all images in the `evaluation_images/` folder.
+5. Check **Loop images** and click **Ok**.  
+  ![Second Dialog](images/intrinsic_eval_2nd_diag.png)
+6. Set **Image view type** to `Source rectified`.
+7. Set "Visualization options" > "Undistortion alpha" to `1.00`.
+8. **Success Criteria**: The rectified image should look roughly symmetric. If it looks distorted (e.g., asymmetric X-shape), you need to refine the data.  
+  ![Eval Main Window](images/intrinsic_eval_main_window.png)
+9. **Wrong image example**:  
+  If a completely asymmetric result like the following is shown, there is a high possibility that intrinsic calibration went wrong. In that case, consider redoing the calibration process or refining data introduced in the next section.  
+  ![Eval Bad Example](images/intrinsic_eval_bad_example.png)
 
 ### Step 2: Refinement
 If the results are poor:
 1.  Inspect the `training_images` folder.
 2.  **Remove Bad Samples**: Delete images with motion blur or where the board is not clearly detected.
+  ![Eval Bad Example](images/DRS_calib_manual_bad_image_example.png)
 3.  **Recalibrate**: Run the tool using **Image files** as the source, selecting the cleaned `training_images` folder, and repeat the calibration.
 
 ---
@@ -99,25 +106,32 @@ If the results are poor:
 ### Step 1: Edit the YAML File
 Open the saved `<camera_name>_info.yaml` and apply these manual changes:
 
-```yaml
-# 1. Set the camera name
-camera_name: "camera<N>"  # e.g., camera0
-
-# 2. For 120° cameras only:
-distortion_model: "rational_polynomial"
-# Ensure the D matrix has 8 columns (add zeros if necessary)
+```patch
+--- ./<camera_name>_info.yaml.before
++++ ./<camera_name>_info.yaml.after
+-camera_name: ''
++camera_name: 'camera0' # <- change to match the target camera name
 ```
 
+**Camera Position Mapping:**
+
+| Camera Name | Position | FoV |
+| :--- | :--- | :--- |
+| **camera0** | Front Narrow | 30° |
+| **camera1** | Front Wide | 120° |
+| **camera2** | Right Front | 120° |
+| **camera3** | Right Rear | 120° |
+| **camera4** | Rear Narrow | 30° |
+| **camera5** | Rear Wide | 120° |
+| **camera6** | Left Rear | 120° |
+| **camera7** | Left Front | 120° |
+
 ### Step 2: Deploy to ECUs
-Copy the finalized `camera_info.yaml` to the appropriate location on the ECUs.
+Rename the finalized `<camera_name>_info.yaml` to `camera_info.yaml` and copy it to the appropriate location on the ECUs.
 
 | Component | Destination Path |
 | :--- | :--- |
-| **Path** | `data_recording_system/src/individual_params/config/default/camera<N>/camera_info.yaml` |
-
-**ECU Mapping:**
-- **ECU0**: `camera0`, `camera1`, `camera2`, `camera3`
-- **ECU1**: `camera4`, `camera5`, `camera6`, `camera7`
+| **Path** | `/opt/drs/config/params/camera<N>/camera_info.yaml` |
 
 ---
 

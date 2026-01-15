@@ -4,15 +4,17 @@ This page describes the procedure for calibrating the relative pose between mult
 
 Tool reference: [mapping_based_calibrator.md](https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/mapping_based_calibrator.md)
 
-:::warning
-The alignment calculation after playback can take **30 minutes or more**. Ensure your environment is stable during this time.
-:::
+> [!WARNING]
+> The alignment calculation after playback can take **30 minutes or more**. Ensure your environment is stable during this time.
 
 ---
 
 ## 1. Data Collection (ECU Side)
 
 Calibrating multiple LiDARs requires high-quality point cloud data from an environment with varied features.
+
+> [!NOTE]
+> Depending on the driver used, the topic name may be `seyond_packets` instead of `nebula_packets`.
 
 1.  **Preparation**: Drive the vehicle to an open area with some structures (e.g., walls, pillars, or parked vehicles) for better feature matching.
 2.  **Record Data**: Drive in a **figure-eight or oval trajectory** to ensure all LiDARs capture overlapping features from different angles.
@@ -42,6 +44,9 @@ You need to run the decoder and the calibration manager in separate environments
     ```bash
     ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
     ```
+
+    > [!NOTE]
+    > If you are using the Seyond LiDAR driver, add the argument `lidar_driver_type:=seyond` to the launch command.
 2.  **Terminal 2 (Calibration Container)**: Start the calibration manager.
     ```bash
     ros2 run sensor_calibration_manager sensor_calibration_manager
