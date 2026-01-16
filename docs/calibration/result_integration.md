@@ -13,10 +13,10 @@ After completing camera and LiDAR calibrations, you must merge the resulting YAM
 The DRS repository provides a script to collect all `*.yaml` results from a directory and generate a unified TF file.
 
 ```bash
-# /calib should contain:
+# <temporary_directory> should contain:
 # - camera<N>_calibration_results.yaml
 # - lidar_calibration_results.yaml
-python3 data_recording_system/scripts/aggregate_calibration_files.py /calib
+python3 data_recording_system/scripts/aggregate_calibration_files.py <temporary_directory>
 ```
 
 ### Step 2: Manual TF Adjustment
@@ -27,16 +27,20 @@ The aggregated `multi_tf_static.yaml` contains sensor-to-sensor offsets. However
 2.  Locate the `base_link` to `drs_base_link` entry.
 3.  **Update the values**: Replace the placeholder values with the actual offsets from your vehicle design.
 
+    **Example**:
+    ```yaml
+    # Base link transform
+    base_link:
+      drs_base_link:
+        x: 0.759
+        y: 0.0
+        z: 1.961
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+    ```
+
 ![Base Link Diagram](images/base_link.svg)
-
-### Step 3: Organize Files
-
-Place the finalized `multi_tf_static.yaml` in the local configuration directory before deployment.
-
-```bash
-# Path: data_recording_system/src/individual_params/config/default/multi_tf_static.yaml
-cp multi_tf_static.yaml data_recording_system/src/individual_params/config/default/
-```
 
 ---
 
@@ -46,19 +50,11 @@ Now, apply the aggregated configuration and the individual camera/LiDAR paramete
 
 ### Step 1: Transfer Files to ECUs
 
-Copy the entire `default` configuration folder to the designated directory on each ECU.
+Copy the aggregated `multi_tf_static.yaml` to the appropriate location on the ECUs.
 
-> [!TIP]
-> Always back up the existing configuration on the ECU before overwriting.
-
-**Deployment to ECU0 & ECU1:**
-```bash
-# Sync the individual_params/config/default directory to ECU0
-rsync -avz ./data_recording_system/src/individual_params/config/default/ nvidia@192.168.20.1:/opt/drs/install/individual_params/share/individual_params/config/default/
-
-# Sync the individual_params/config/default directory to ECU1
-rsync -avz ./data_recording_system/src/individual_params/config/default/ nvidia@192.168.20.2:/opt/drs/install/individual_params/share/individual_params/config/default/
-```
+| Component | Destination Path |
+| :--- | :--- |
+| **Path** | `/opt/drs/config/params/multi_tf_static.yaml` |
 
 ### Step 2: Apply Changes
 

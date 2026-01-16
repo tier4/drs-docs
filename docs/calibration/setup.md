@@ -9,7 +9,12 @@ It is assumed that sensor data (Camera/LiDAR) is delivered over ROS topics to a 
 -   **Physical Connection**: Use the right-most port of the Anvil ECUs.
 -   **Static IP (PC Side)**: Configure your network interface with a static IP: `192.168.20.<X>/24` (where `<X>` is `3-255`).
 
-![Connection Diagram](images/drs_calibration_connection_diagram.svg)
+> [!NOTE]
+> While there are variations in system configurations, the critical point for connection is ensuring that the PC is connected to the `192.168.20.<X>/24` network.
+
+![Connection Diagram](images/drs_calibration_connection_diagram.png)
+
+
 
 ---
 
