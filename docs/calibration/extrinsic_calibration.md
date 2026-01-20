@@ -59,6 +59,10 @@ ros2 launch drs_launch drs.launch.xml publish_tf:=false param_root_dir:=/opt/drs
     - **Calibrator**: `tag_based_pnp_calibrator`
     - Click **Continue**.  
     ![First Dialog](images/image-20241120-124937.png)
+
+> [!NOTE]
+> If you are using the Seyond LiDAR driver, select **Project**: `drs_seyond`.
+
 2.  **Second Dialog**:
     - **Camera Name**: Select the target camera (e.g., `camera0`). The tool will automatically select the corresponding LiDAR.
     - Click **Launch**.  
