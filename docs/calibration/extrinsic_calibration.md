@@ -12,15 +12,26 @@ Tool reference: [tag_based_pnp_calibrator.md](https://github.com/tier4/Calibrati
 
 ## 1. Preparation
 
+### Hardware: GNSS/INS Disconnection
+Before starting the calibration, disconnect the GNSS/INS LAN cable from **ecu0** to eliminate any potential influence from the GNSS/INS.
+
+> [!NOTE]
+> If the GNSS/INS is used for time synchronization, differences in how Leap Seconds are handled (depending on the configuration) may cause timestamp drifts between the LiDAR and the Camera, making it impossible to perform the calibration.
+
 ### ECU Side: Start Sensor Streams
 Calibration requires sensor data without coordinate transformations (TF).
 
 ```bash
-# SSH into the ECU0 and ECU1 that target sensors are connected
+# SSH into BOTH ECU0 and ECU1
 # example ECU0: ssh nvidia@192.168.20.1 
-sudo systemctl stop drs-sensor.service
+# example ECU1: ssh nvidia@192.168.20.2
 
-# Start DRS services without TF
+# Stop DRS sensor services on BOTH ECUs
+sudo systemctl stop drs-sensor.service
+```
+
+```bash
+# On the ECU where target sensors are connected, start DRS services without TF
 ros2 launch drs_launch drs.launch.xml publish_tf:=false param_root_dir:=/opt/drs/config/params
 ```
 
@@ -129,6 +140,18 @@ If the "delay" value in the UI is too high, the images may not display. This is 
           ```
 
 ---
+
+### Pair count display does not appear in RViz after clicking "Calibrate"
+Even after clicking the **Calibrate** button, the status text showing the number of pairs may not appear in the RViz window.
+
+**Possible Cause**:
+If the Calibration Tool has been launched and closed multiple times, some background processes may have failed to terminate correctly, interfering with the calibration process.
+
+**Fix/Countermeasures**:
+- Restart the PC to ensure all processes are correctly reset.
+
+---
+
 ### AprilTag Not Detected
 - Ensure the board is well-lit and not tilted at an extreme angle.
 - If performing calibration outdoors, check for strong sunlight reflections on the board.
