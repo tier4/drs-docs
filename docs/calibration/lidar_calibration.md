@@ -16,6 +16,9 @@ Calibrating multiple LiDARs requires high-quality point cloud data from an envir
 
 1.  **Preparation**: Drive the vehicle to an open area with some structures (e.g., walls, pillars, or parked vehicles) for better feature matching.
 2.  **Record Data**: Drive in a **figure-eight or oval trajectory** to ensure all LiDARs capture overlapping features from different angles.
+    -   Drive at a **low, constant speed** (approx. 5 km/h).
+    -   Avoid significant vehicle shaking from acceleration, deceleration, or road bumps.
+    -   The start and end points must be closed; **overlap slightly** before stopping.
 3.  **Execute Command**:
     ```bash
     # SSH into an ECU (ECU0 or ECU1)
@@ -67,11 +70,17 @@ You need to run the decoder and the calibration manager in separate environments
     ![Third Dialog](images/image-20241127-133013.png)
 
 ### Step 3: Play the Rosbag
-1.  **Execute Playback**: Play the MCAP file recorded in **1. Data Collection (ECU Side)**.
+
+1.  **Save Rosbag to PC**: Copy the Rosbag recorded in **1. Data Collection (ECU Side)** from the ECU to the calibration PC.
     ```bash
-    ros2 bag play <BAG_PATH> --clock 100 -r 0.1
+    # example for ECU0
+    scp -r nvidia@192.168.20.1:<BAG_PATH> <LOCAL_BAG_PATH>
     ```
-2.  **Wait**: The playback speed is set to `0.1x` to ensure the tool has enough time to process the packets. The tool automatically controls pausing and resuming. Keyframe positions should be seen/added on the RViz as the playback progresses.
+2.  **Terminal 3 (Runtime Container or Local Build Environment)**: **Execute Playback**: Play the MCAP file on the PC.
+    ```bash
+    ros2 bag play <LOCAL_BAG_PATH> --clock 100 -r 0.1
+    ```
+3.  **Wait**: The playback speed is set to `0.1x` to ensure the tool has enough time to process the packets. The tool automatically controls pausing and resuming. Keyframe positions should be seen/added on the RViz as the playback progresses.
     ![RViz](images/image-20241127-133557.png)
 
 ---

@@ -137,6 +137,33 @@ if [ -f <CLONE_DIR>/data_recording_system/install/setup.bash ]; then
 fi
 ```
 
+## Environment Verification
+
+After setting up the environment, verify that ROS 2 is working correctly by listing the active topics.
+
+> [!NOTE]
+> If you are using Docker environment, perform this check inside both of the runtime and calibration containers.
+
+```bash
+ros2 topic list
+```
+
+If the system is working correctly, you should not see any error messages. If no other nodes are publishing data, you should see at least the following default topics:
+
+```text
+/parameter_events
+/rosout
+```
+
+### Troubleshooting: "Communication Issues"
+
+If `ros2 topic list` fails, the most common cause is a mismatch in the network interface specified in `cyclonedds.xml`.
+
+**Resolution:**
+1.  Verify your network interface name using `ip addr`.
+2.  Ensure that the `<NetworkInterface name="..."/>` tag in `docker/cyclonedds.xml` (for Docker) or your DDS configuration file (for source builds) matches your actual interface name.
+3.  Run `ros2 topic list` again to verify the connection.
+
 ---
 
 **Next Step**: [Sensor operation check](sensor_check.md)
