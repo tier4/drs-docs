@@ -16,7 +16,7 @@ Calibrating multiple LiDARs requires high-quality point cloud data from an envir
 
 1.  **Preparation**: Drive the vehicle to an open area with some structures (e.g., walls, pillars, or parked vehicles) for better feature matching.
 2.  **Record Data**: Drive in a **figure-eight or oval trajectory** to ensure all LiDARs capture overlapping features from different angles.
-    -   Drive at a **low, constant speed** (approx. 5 km/h).
+    -   Drive at a **low, constant speed** (5 km/h or less).
     -   Avoid significant vehicle shaking from acceleration, deceleration, or road bumps.
     -   The start and end points must be closed; **overlap slightly** before stopping.
 3.  **Execute Command**:
@@ -87,7 +87,7 @@ You need to run the decoder and the calibration manager in separate environments
 
 ## 3. Finalization
 
-1.  **Stop Mapping**: Once playback finishes, call the stop service to trigger the final alignment calculation.
+1.  **Terminal 3**: **Stop Mapping**: Once playback finishes, call the stop service to trigger the final alignment calculation.
     ```bash
     ros2 service call /stop_mapping std_srvs/srv/Empty
     ```
