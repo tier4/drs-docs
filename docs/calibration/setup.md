@@ -10,7 +10,7 @@ It is assumed that sensor data (Camera/LiDAR) is delivered over ROS topics to a 
 -   **Static IP (PC Side)**: Configure your network interface with a static IP: `192.168.20.<X>/24` (where `<X>` is `3-255`).
 
 > [!NOTE]
-> While there are variations in system configurations, the critical point for connection is ensuring that the PC is connected to the `192.168.20.<X>/24` network.
+> The `192.168.20.<X>/24` network is where ECUs inside the DRS are connected. ECU0 is assigned `192.168.20.1`, ECU1 is assigned `192.168.20.2`, and in general, ECU<N> is assigned `192.168.20.<N>+1`. Therefore, assign an IP address to the PC's network interface that is not used by any other ECU.
 
 ![Connection Diagram](images/drs_calibration_connection_diagram.png)
 
