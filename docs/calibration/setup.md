@@ -29,16 +29,19 @@ You can set up the environment using either **Docker** (recommended) or by **bui
 
 This method provides a pre-configured environment and is the easiest way to get started.
 
-#### 1. Prerequisites
+#### 1. PC Requirements
 
+**Software:**
 | Requirement | Description |
 | :--- | :--- |
 | **OS** | Ubuntu 22.04 |
 | **Docker** | [Installation Guide](https://docs.docker.com/engine/install/ubuntu/) |
 | **NVIDIA Container Toolkit** | [Installation Guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) |
 
-**Confirmed Environment:**
-- CPU: Core i7-11800H / RAM: 32GB / GPU: RTX 3060 Mobile
+**Confirmed Hardwares:**
+- CPU: Core i7-11800H
+- RAM: 32GB
+- GPU: RTX 3060 Mobile
 
 #### 2. Get the Source Code
 
@@ -52,20 +55,19 @@ cd data_recording_system
 In order for the PC to communicate with the ECUs, you must specify the correct network interface name in the DDS configuration.
 
 1.  Find your interface name (e.g., `enp1s0`) using `ip addr` command.
-2.  Edit `docker/cyclonedds.xml`:
-
-```xml
-<!-- data_recording_system/docker/cyclonedds.xml -->
-<NetworkInterface name="<YOUR_NETWORK_INTERFACE_NAME>" priority="default" multicast="default"/>
-```
+2.  Edit `./docker/cyclonedds.xml`:
+    ```xml
+    <!-- data_recording_system/docker/cyclonedds.xml -->
+    <NetworkInterface name="<YOUR_NETWORK_INTERFACE_NAME>" priority="default" multicast="default"/>
+    ```
+    Replace `<YOUR_NETWORK_INTERFACE_NAME>` with your actual network interface name.
 
 #### 4. Launch Containers
 
-You will need two separate containers: one for runtime components and one for the calibration tool.
+You will need two separate containers: one for **1. runtime components** and one for the **2. calibration tool**. The runtime components container is used to decode point cloud packets that are streamed from DRS on the PC. The calibration tool container is used to compute camera intrinsics, camera-lidar extrinsics, and lidar-lidar extrinsics on the PC using topics streamed from DRS.
 
-**Terminal 1: DRS Runtime Components**
+**Terminal 1: Runtime Components**
 ```bash
-# Start the runtime container to handle DRS components
 ./docker/runtime/run.sh \
   --option -v ./docker/cyclonedds.xml:/opt/drs/config/cyclonedds.xml \
   -- bash
@@ -73,7 +75,6 @@ You will need two separate containers: one for runtime components and one for th
 
 **Terminal 2: Calibration Tool**
 ```bash
-# Start the calibration container to handle calibration tools
 # Replace <HOST_CALIB_DIR> with an absolute path on your PC (e.g., /home/user/drs_calib)
 ./docker/calibration/run.sh \
   --option -v <HOST_CALIB_DIR>:/calib \
@@ -82,7 +83,7 @@ You will need two separate containers: one for runtime components and one for th
 ```
 
 > [!NOTE]
-> The calibration results will be saved to the directory mounted at `/calib`. Ensure this directory `<HOST_CALIB_DIR>` exists on your host machine.
+> The calibration results will be saved to `<HOST_CALIB_DIR>`. The directory mounted at `/calib` in the container corresponds to `<HOST_CALIB_DIR>` on your host machine. Ensure this directory exists on your host machine.
 
 ---
 
