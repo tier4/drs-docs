@@ -44,11 +44,12 @@ You need to run the decoder and the calibration manager in separate environments
 
 1.  **Terminal 1 (Runtime Container or Local Build Environment)**: Launch the LiDAR packet decoder.
     ```bash
+    # To decode nebula_packets
     ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
-    ```
 
-    > [!NOTE]
-    > If you are using the Seyond LiDAR driver, add the argument `lidar_driver_type:=seyond` to the launch command.
+    # To decode seyond_packets
+    ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false lidar_driver_type:=seyond
+    ```
 2.  **Terminal 2 (Calibration Container or Local Build Environment)**: Start the calibration manager.
     ```bash
     ros2 run sensor_calibration_manager sensor_calibration_manager
@@ -56,7 +57,9 @@ You need to run the decoder and the calibration manager in separate environments
 
 ### Step 2: Configure the Tool
 1.  **First Dialog**:
-    - **Project**: Select `drs`.
+    - **Project**:
+      - Select `drs` if nebula driver is used
+      - Select `drs_seyond` if seyond driver is used
     - **Calibrator**: Select `mapping_based_lidar_lidar_calibrator`.
     - Click **Continue**.  
     ![First Dialog](images/image-20241127-131828.png)
@@ -96,15 +99,14 @@ You need to run the decoder and the calibration manager in separate environments
     ![Save Results](images/image-20241127-142231.png)
 
 4. **Rename Result**: Rename the generated file to `lidar_calibration_results.yaml`.
-    > [!NOTE]
-    > In the next step, this result is used to create `multi_tf_static.yaml`. The expected directory structure for the results is as follows:
-    > ```text
-    > [temporary_directory]
-    > ├── lidar_calibration_results.yaml
-    > ├── camera0_calibration_results.yaml
-    > ├── :
-    > └── camera7_calibration_results.yaml
-    > ```
+    In the next step, this result is used to create `multi_tf_static.yaml`. The expected directory structure for the results is as follows:
+    ```text
+    [temporary_directory]
+    ├── lidar_calibration_results.yaml
+    ├── camera0_calibration_results.yaml
+    ├── :
+    └── camera7_calibration_results.yaml
+    ```
 
 ---
 

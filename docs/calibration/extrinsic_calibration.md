@@ -18,7 +18,7 @@ Before starting the calibration, disconnect the GNSS/INS LAN cable from **ecu0**
 > [!NOTE]
 > If the GNSS/INS is used for time synchronization, differences in how Leap Seconds are handled (depending on the configuration) may cause timestamp drifts between the LiDAR and the Camera, making it impossible to perform the calibration.
 
-### ECU Side: Start Sensor Streams
+### Start Sensor Streams (ECU Side)
 Calibration requires sensor data without coordinate transformations (TF).
 
 ```bash
@@ -35,34 +35,31 @@ sudo systemctl stop drs-sensor.service
 ros2 launch drs_launch drs.launch.xml publish_tf:=false param_root_dir:=/opt/drs/config/params
 ```
 
-### PC Side: Launch Decoder & Tool
+### Launch Decoder & Tool (PC Side)
 1.  **Launch Decoder (Runtime Container or Local Build Environment)**: Run the offline decoder to process sensor packets.
     ```bash
+    # To decode nebula_packets
     ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
+
+    # To decode seyond_packets
+    ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false lidar_driver_type:=seyond
     ```
-
-> [!NOTE]
-> If you are using the Seyond LiDAR driver, add the argument `lidar_driver_type:=seyond` to the launch command.
-
 2.  **Launch Tool (Calibration Container or Local Build Environment)**: Start the sensor calibration manager.
     ```bash
     ros2 run sensor_calibration_manager sensor_calibration_manager
     ```
-
 ---
 
 ## 2. Calibration Procedure
 
 ### Step 1: Initial Configuration
 1.  **First Dialog**:
-    - **Project**: `drs`
+    - **Project**:
+      - Select `drs` if nebula driver is used
+      - Select `drs_seyond` if seyond driver is used
     - **Calibrator**: `tag_based_pnp_calibrator`
     - Click **Continue**.  
     ![First Dialog](images/image-20241120-124937.png)
-
-> [!NOTE]
-> If you are using the Seyond LiDAR driver, select **Project**: `drs_seyond`.
-
 2.  **Second Dialog**:
     - **Camera Name**: Select the target camera (e.g., `camera0`). The tool will automatically select the corresponding LiDAR.
     - Click **Launch**.  
@@ -122,8 +119,11 @@ If the "delay" value in the UI is too high, the images may not display. This is 
 1.  **Check Timestamp Offset**:
     Verify the timestamps of the target camera and LiDAR to check for synchronization gaps.
     ```bash
-    # Check LiDAR timestamp
+    # Check LiDAR timestamp (if nebula driver is in use)
     ros2 topic echo /sensing/lidar/front/nebula_points --field header.stamp
+
+    # Check LiDAR timestamp (if seyond driver is in use)
+    ros2 topic echo /sensing/lidar/front/seyond_points --field header.stamp
 
     # Check Camera timestamp
     ros2 topic echo /sensing/camera/camera0/image_raw/compressed --field header.stamp
