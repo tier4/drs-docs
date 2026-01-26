@@ -31,7 +31,7 @@ The data collection process described below is assumed to be performed on ECU0 o
 4. **Stop recording**: After completing one lap, press `Ctrl+C` to stop the rosbag recording.
 
 > [!WARNING]
-> It is recommended to collect 3 ~ 4 sets of data (3 ~ 4 MCAP files) by repeating the above process.
+> It is recommended to collect 3 to 4 sets of data (3 to 4 MCAP files) in case the calibration fails in later steps.
 
 ---
 
