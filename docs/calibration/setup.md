@@ -22,6 +22,9 @@ It is assumed that sensor data (Camera/LiDAR) is delivered over ROS topics to a 
 
 You can set up the environment using either **Docker** (recommended) or by **building from source**.
 
+> [!IMPORTANT]
+> Building from source requires access permissions to several private repositories. Therefore, building from source is primarily intended for internal use. Regular DRS users should use Docker instead.
+
 ### Option 1: Using Docker (Recommended)
 
 This method provides a pre-configured environment and is the easiest way to get started.
@@ -86,9 +89,6 @@ You will need two separate containers: one for runtime components and one for th
 ### Option 2: Building from Source
 
 Use this option if you need to run the tools natively or customize the build.
-
-> [!IMPORTANT]
-> Some dependencies are hosted in private repositories. Ensure that your GitHub account has the necessary permissions to access these repositories.
 
 #### 1. Prerequisites
 
