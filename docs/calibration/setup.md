@@ -164,11 +164,11 @@ If the system is working correctly, you should not see any error messages. If no
 
 ### Troubleshooting: "Communication Issues"
 
-If `ros2 topic list` fails, the most common cause is a mismatch in the network interface specified in `cyclonedds.xml`.
+If `ros2 topic list` fails, the most common cause is a mismatch in the network interface specified in the DDS settings.
 
 **Resolution:**
-1.  Verify your network interface name using `ip addr`.
-2.  Ensure that the `<NetworkInterface name="..."/>` tag in `docker/cyclonedds.xml` (for Docker) or your DDS configuration file (for source builds) matches your actual interface name.
+1.  Use `ip addr` to find the network interface name that has the static IP `192.168.20.<X>` configured.
+2.  Ensure that the `<NetworkInterface name="..."/>` tag in `data_recording_system/docker/cyclonedds.xml` (for Docker users) or in your DDS configuration file (for source builds) matches the interface name checked in the previous step.
 3.  Run `ros2 topic list` again to verify the connection.
 
 ---
