@@ -61,7 +61,7 @@ You need to run the decoder and the calibration manager in separate environments
     - Click **Continue**.  
     ![First Dialog](images/image-20241127-131828.png)
 2.  **Second Dialog**:
-    - **Parameters**: Set the value of `imu_to_front_*` to the sensors' installation design.The values represent the origin pose of the front LiDAR in terms of INS origin.
+    - **Parameters**: Set the value of `imu_to_front_*` to the sensors' installation design. The values represent the origin pose of the front LiDAR in terms of INS origin.
     - Click **Launch**.
     ![Second Dialog](images/image-20241127-132059.png)
 3.  **Third Dialog**:
