@@ -31,7 +31,7 @@ This method provides a pre-configured environment and is the easiest way to get 
 
 #### 1. PC Requirements
 
-**Software:**
+**Softwares:**
 | Requirement | Description |
 | :--- | :--- |
 | **OS** | Ubuntu 22.04 |
@@ -91,14 +91,20 @@ You will need two separate containers: one for **1. runtime components** and one
 
 Use this option if you need to run the tools natively or customize the build.
 
-#### 1. Prerequisites
+#### 1. PC Requirements
 
+**Softwares:**
 | Requirement | Description |
 | :--- | :--- |
 | **OS** | Ubuntu 22.04 |
 | **ROS** | ROS 2 Humble |
 | **CUDA** | CUDA Toolkit 12.6 |
 | **Middleware** | `sudo apt install ros-humble-rmw-cyclonedds-cpp` <BR> [DDS Settings](https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/network-configuration/dds-settings/) |
+
+**Confirmed Hardwares:**
+- CPU: Core i7-11800H
+- RAM: 32GB
+- GPU: RTX 3060 Mobile
 
 #### 2. Install DRS Components
 
