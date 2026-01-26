@@ -4,33 +4,35 @@ This page describes the procedure for calibrating the relative pose between mult
 
 Tool reference: [mapping_based_calibrator.md](https://github.com/tier4/CalibrationTools/blob/feat/drs/docs/tutorials/mapping_based_calibrator.md)
 
-> [!WARNING]
-> The alignment calculation after playback can take **30 minutes or more**. Ensure your environment is stable during this time.  
-> It is also recommended to record approximately **four patterns** of data to get reliable calibration results.
-
 ---
 
 ## 1. Data Collection (ECU Side)
 
-Calibrating multiple LiDARs requires high-quality point cloud data from an environment with varied features.
+The data collection process described below is assumed to be performed on ECU0 or ECU1 inside DRS.
 
-1.  **Preparation**: Drive the vehicle to an open area with some structures (e.g., walls, pillars, or parked vehicles) for better feature matching.
-2.  **Record Data**: Drive in a **figure-eight or oval trajectory** to ensure all LiDARs capture overlapping features from different angles.
-3.  **Execute Command**:
+1.  **Preparation**: Place the vehicle equipped with DRS in an open area. Having structures such as walls, pillars, or parked vehicles is better for feature matching. However, ensure that there are no moving people or vehicles in the surroundings. Moving objects in the surroundings will degrade the calibration accuracy.
+2.  **Start Recording**:
     ```bash
     # SSH into an ECU (ECU0 or ECU1)
-    # Record all LiDAR packet topics to an MCAP file
+    # Record all LiDAR packet topics to an MCAP file at <ECU_BAG_PATH>
     ros2 bag record -s mcap \
       /sensing/lidar/front/nebula_packets \
       /sensing/lidar/right/nebula_packets \
       /sensing/lidar/rear/nebula_packets \
       /sensing/lidar/left/nebula_packets \
-      -o <BAG_NAME>
+      -o <ECU_BAG_PATH>
     ```
-    > [!NOTE]
-    > Depending on the driver used, the topic name may be `seyond_packets` instead of `nebula_packets`.
-
+    Depending on the driver used, the topic name may be `seyond_packets` instead of `nebula_packets`.
+3.  **Drive Vehicle**: Drive in a **figure-eight or oval trajectory** to ensure all LiDARs capture overlapping features from different angles.
+    -   Drive at a **low, constant speed** (~5 km/h).
+    -   Avoid significant vehicle shaking from acceleration, deceleration, or road bumps.
+    -   The start and end points must be closed; **overlap slightly** before stopping.
     ![LiDAR Recording](images/image-2025-09-03-13-45-14.png)
+4. **Stop recording**: After completing one lap, press `Ctrl+C` to stop the rosbag recording.
+
+> [!WARNING]
+> It is recommended to collect 3 to 4 sets of data (3 to 4 MCAP files) in case the calibration fails in later steps.
+
 ---
 
 ## 2. Calibration Procedure (PC Side)
@@ -59,7 +61,7 @@ You need to run the decoder and the calibration manager in separate environments
     - Click **Continue**.  
     ![First Dialog](images/image-20241127-131828.png)
 2.  **Second Dialog**:
-    - **Initial Values**: Tune the value of `imu_to_front_*` according to the sensors' installation design.<br>The values represent the origin pose of the front LiDAR in terms of INS origin.
+    - **Parameters**: Set the value of `imu_to_front_*` to the sensors' installation design. The values represent the origin pose of the front LiDAR in terms of INS origin.
     - Click **Launch**.
     ![Second Dialog](images/image-20241127-132059.png)
 3.  **Third Dialog**:
@@ -67,18 +69,24 @@ You need to run the decoder and the calibration manager in separate environments
     ![Third Dialog](images/image-20241127-133013.png)
 
 ### Step 3: Play the Rosbag
-1.  **Execute Playback**: Play the MCAP file recorded in **1. Data Collection (ECU Side)**.
+
+1.  **Save Rosbag to PC**: Copy the Rosbag recorded in **1. Data Collection (ECU Side)** from the ECU to the calibration PC.
     ```bash
-    ros2 bag play <BAG_PATH> --clock 100 -r 0.1
+    # If the rosbag was saved on ECU0
+    scp -r nvidia@192.168.20.1:<ECU_BAG_PATH> <PC_BAG_PATH>
     ```
-2.  **Wait**: The playback speed is set to `0.1x` to ensure the tool has enough time to process the packets. The tool automatically controls pausing and resuming. Keyframe positions should be seen/added on the RViz as the playback progresses.
+2.  **Terminal 3 (Runtime Container or Local Build Environment)**: **Execute Playback**: Play the MCAP file on the PC.
+    ```bash
+    ros2 bag play <PC_BAG_PATH> --clock 100 -r 0.1
+    ```
+3.  **Wait**: The playback speed is set to `0.1x` to ensure the tool has enough time to process the packets. The tool automatically controls pausing and resuming. Keyframe positions should be seen/added on the RViz as the playback progresses.
     ![RViz](images/image-20241127-133557.png)
 
 ---
 
 ## 3. Finalization
 
-1.  **Stop Mapping**: Once playback finishes, call the stop service to trigger the final alignment calculation.
+1.  **Terminal 3**: **Stop Mapping**: Once playback finishes, call the stop service to trigger the final alignment calculation.
     ```bash
     ros2 service call /stop_mapping std_srvs/srv/Empty
     ```
@@ -87,8 +95,7 @@ You need to run the decoder and the calibration manager in separate environments
 3. **Save Results**: Once the alignment finishes, the **Save calibration** button will become available. Press it and save the result.
     ![Save Results](images/image-20241127-142231.png)
 
-    **Rename Result**: Rename the generated file to `lidar_calibration_results.yaml`.
-
+4. **Rename Result**: Rename the generated file to `lidar_calibration_results.yaml`.
     > [!NOTE]
     > In the next step, this result is used to create `multi_tf_static.yaml`. The expected directory structure for the results is as follows:
     > ```text

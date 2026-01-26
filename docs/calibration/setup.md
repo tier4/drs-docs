@@ -10,7 +10,7 @@ It is assumed that sensor data (Camera/LiDAR) is delivered over ROS topics to a 
 -   **Static IP (PC Side)**: Configure your network interface with a static IP: `192.168.20.<X>/24` (where `<X>` is `3-255`).
 
 > [!NOTE]
-> While there are variations in system configurations, the critical point for connection is ensuring that the PC is connected to the `192.168.20.<X>/24` network.
+> The `192.168.20.<X>/24` network is where ECUs inside the DRS are connected. ECU0 is assigned `192.168.20.1`, ECU1 is assigned `192.168.20.2`, and in general, ECU<N> is assigned `192.168.20.<N>+1`. Therefore, assign an IP address to the PC's network interface that is not used by any other ECU.
 
 ![Connection Diagram](images/drs_calibration_connection_diagram.png)
 
@@ -22,20 +22,26 @@ It is assumed that sensor data (Camera/LiDAR) is delivered over ROS topics to a 
 
 You can set up the environment using either **Docker** (recommended) or by **building from source**.
 
+> [!IMPORTANT]
+> Building from source requires access permissions to several private repositories. Therefore, building from source is primarily intended for internal use. Regular DRS users should use Docker instead.
+
 ### Option 1: Using Docker (Recommended)
 
 This method provides a pre-configured environment and is the easiest way to get started.
 
-#### 1. Prerequisites
+#### 1. PC Requirements
 
+**Software:**
 | Requirement | Description |
 | :--- | :--- |
 | **OS** | Ubuntu 22.04 |
 | **Docker** | [Installation Guide](https://docs.docker.com/engine/install/ubuntu/) |
 | **NVIDIA Container Toolkit** | [Installation Guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) |
 
-**Confirmed Environment:**
-- CPU: Core i7-11800H / RAM: 32GB / GPU: RTX 3060 Mobile
+**Confirmed Hardware:**
+- CPU: Core i7-11800H
+- RAM: 32GB
+- GPU: RTX 3060 Mobile
 
 #### 2. Get the Source Code
 
@@ -49,20 +55,19 @@ cd data_recording_system
 In order for the PC to communicate with the ECUs, you must specify the correct network interface name in the DDS configuration.
 
 1.  Find your interface name (e.g., `enp1s0`) using `ip addr` command.
-2.  Edit `docker/cyclonedds.xml`:
-
-```xml
-<!-- data_recording_system/docker/cyclonedds.xml -->
-<NetworkInterface name="<YOUR_NETWORK_INTERFACE_NAME>" priority="default" multicast="default"/>
-```
+2.  Edit `./docker/cyclonedds.xml`:
+    ```xml
+    <!-- data_recording_system/docker/cyclonedds.xml -->
+    <NetworkInterface name="<YOUR_NETWORK_INTERFACE_NAME>" priority="default" multicast="default"/>
+    ```
+    Replace `<YOUR_NETWORK_INTERFACE_NAME>` with your actual network interface name.
 
 #### 4. Launch Containers
 
-You will need two separate containers: one for runtime components and one for the calibration tool.
+You will need two separate containers: one for **1. runtime components** and one for the **2. calibration tool**. The runtime components container is used to decode point cloud packets that are streamed from DRS on the PC. The calibration tool container is used to compute camera intrinsics, camera-lidar extrinsics, and lidar-lidar extrinsics on the PC using topics streamed from DRS.
 
-**Terminal 1: DRS Runtime Components**
+**Terminal 1: Runtime Components**
 ```bash
-# Start the runtime container to handle DRS components
 ./docker/runtime/run.sh \
   --option -v ./docker/cyclonedds.xml:/opt/drs/config/cyclonedds.xml \
   -- bash
@@ -70,7 +75,6 @@ You will need two separate containers: one for runtime components and one for th
 
 **Terminal 2: Calibration Tool**
 ```bash
-# Start the calibration container to handle calibration tools
 # Replace <HOST_CALIB_DIR> with an absolute path on your PC (e.g., /home/user/drs_calib)
 ./docker/calibration/run.sh \
   --option -v <HOST_CALIB_DIR>:/calib \
@@ -79,7 +83,7 @@ You will need two separate containers: one for runtime components and one for th
 ```
 
 > [!NOTE]
-> The calibration results will be saved to the directory mounted at `/calib`. Ensure this directory `<HOST_CALIB_DIR>` exists on your host machine.
+> The calibration results will be saved to `<HOST_CALIB_DIR>`. The directory mounted at `/calib` in the container corresponds to `<HOST_CALIB_DIR>` on your host machine. Ensure this directory exists on your host machine.
 
 ---
 
@@ -87,17 +91,20 @@ You will need two separate containers: one for runtime components and one for th
 
 Use this option if you need to run the tools natively or customize the build.
 
-> [!IMPORTANT]
-> Some dependencies are hosted in private repositories. Ensure that your GitHub account has the necessary permissions to access these repositories.
+#### 1. PC Requirements
 
-#### 1. Prerequisites
-
+**Software:**
 | Requirement | Description |
 | :--- | :--- |
 | **OS** | Ubuntu 22.04 |
 | **ROS** | ROS 2 Humble |
 | **CUDA** | CUDA Toolkit 12.6 |
 | **Middleware** | `sudo apt install ros-humble-rmw-cyclonedds-cpp` <BR> [DDS Settings](https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/network-configuration/dds-settings/) |
+
+**Confirmed Hardware:**
+- CPU: Core i7-11800H
+- RAM: 32GB
+- GPU: RTX 3060 Mobile
 
 #### 2. Install DRS Components
 
@@ -136,6 +143,33 @@ if [ -f <CLONE_DIR>/data_recording_system/install/setup.bash ]; then
     source <CLONE_DIR>/data_recording_system/install/setup.bash
 fi
 ```
+
+## Environment Verification
+
+After setting up the environment, verify that ROS 2 is working correctly by listing the active topics.
+
+> [!NOTE]
+> If you are using Docker environment, perform this check inside both of the runtime and calibration containers.
+
+```bash
+ros2 topic list
+```
+
+If the system is working correctly, you should not see any error messages. If no other nodes are publishing data, you should see at least the following default topics:
+
+```text
+/parameter_events
+/rosout
+```
+
+### Troubleshooting: "Communication Issues"
+
+If `ros2 topic list` fails, the most common cause is a mismatch in the network interface specified in the DDS settings.
+
+**Resolution:**
+1.  Use `ip addr` to find the network interface name that has the static IP `192.168.20.<X>` configured.
+2.  Ensure that the `<NetworkInterface name="..."/>` tag in `data_recording_system/docker/cyclonedds.xml` (for Docker users) or in your DDS configuration file (for source builds) matches the interface name checked in the previous step.
+3.  Run `ros2 topic list` again to verify the connection.
 
 ---
 
