@@ -66,4 +66,52 @@ sudo systemctl restart drs-sensor.service
 ```
 
 ### Step 3: Final Verification
-Launch the system on the PC and use RViz2 to verify that all TFs (Camera and LiDAR) are correctly aligned and match the vehicle's physical state.
+
+Launch the system on the PC and use Visualization Tool (RViz2, Lightblick/Foxglobe) to verify the following:
+
+1.  **LiDAR Point Cloud Overlap**: Check that the point clouds from all LiDAR sensors are correctly overlaid without significant offsets.
+    -   Display the environment in **Bird's-Eye View (BEV)**.
+    -   Visualize point clouds from all four LiDARs simultaneously, ensuring each LiDAR's point cloud is **color-coded** differently for clarity.
+    -   Focus on areas where the **Fields of View (FoV) overlap** and verify that objects (e.g., walls, poles, or ground features) do not show significant misalignment or "ghosting."
+
+    ![LiDAR Point Cloud Overlap](images/lidars-pointcloud-overlap.png)
+2.  **Camera-LiDAR Fusion**: Verify that the LiDAR point clouds are correctly projected onto the camera images for each camera.
+    -   Display the LiDAR point cloud corresponding to the target camera image.
+    -   Adjust **point cloud size** and **transparency** (alpha) in the visualization tool to make the overlay clearer.
+    -   **Workflow Tips**:
+        -   **Offline (rosbag)**: It is easiest to use **Lightblick** or **Foxglobe** to display rosbag data that has already been processed by the point cloud converter.
+        -   **Online (Real-time)**: Launch the point cloud transformation node and the **rosbridge node** on **the PC**, then connect via **Lightblick** or **Foxglobe** for a more responsive verification.
+
+            **For the point cloud transformation node**:
+            ```bash
+            # Launch Decoder (Runtime Container or Local Build Environment):
+            # To decode nebula_packets
+            ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false
+
+            # To decode seyond_packets
+            ros2 launch drs_launch drs_offline.launch.xml publish_tf:=false lidar_driver_type:=seyond
+            ```
+
+            **For the rosbridge node**:
+            ```bash
+            # Launch rosbridge node (Runtime Container or Local Build Environment):
+            ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+            ```
+    -   Check for significant alignment errors between the image and the point cloud, as shown in the reference image below.
+
+    ![Camera-LiDAR Fusion](images/camera-lidar-overlap.png)
+
+    **Camera-LiDAR Mapping Table:**
+
+    Perform verification for each camera using the corresponding LiDAR data:
+
+    | Camera ID | Position | Corresponding LiDAR |
+    | :--- | :--- | :--- |
+    | **camera0** | Front Narrow | `lidar_front` |
+    | **camera1** | Front Wide | `lidar_front` |
+    | **camera2** | Right Front | `lidar_right` |
+    | **camera3** | Right Rear | `lidar_right` |
+    | **camera4** | Rear Narrow | `lidar_rear` |
+    | **camera5** | Rear Wide | `lidar_rear` |
+    | **camera6** | Left Rear | `lidar_left` |
+    | **camera7** | Left Front | `lidar_left` |
